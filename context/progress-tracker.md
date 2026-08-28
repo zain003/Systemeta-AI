@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Editor foundation
+- Authentication foundation
 
 ## Current Goal
 
-- Complete the base editor chrome from `context/feature-specs/02-editor.md`.
+- Complete the Clerk authentication flow from `context/feature-specs/03-auth.md`.
 
 ## Completed
 
@@ -22,14 +22,26 @@ Update this file whenever the current phase, active feature, or implementation s
 - Created the fixed editor navbar with a state-aware projects sidebar toggle.
 - Created the floating, sliding project sidebar with My Projects and Shared tabs.
 - Added the reusable editor dialog composition pattern for title, description, content, and footer actions.
+- Installed Clerk CLI and connected the project to the configured Clerk application.
+- Added the Clerk provider with the shared dark theme.
+- Added protected routing through the root `proxy.ts` with public sign-in and sign-up paths.
+- Added responsive sign-in and sign-up pages using Clerk components.
+- Added a shared Clerk appearance configuration with the dark theme and CSS-token-based surface, text, input, accent, and error overrides.
+- Configured auth components for local path-based rendering so the responsive auth shell is used instead of Clerk's hosted account page.
+- Refined the auth shell and Clerk form styling with a clearer type hierarchy, restrained divider treatment, token-based controls, and responsive spacing.
+- Added Geist-aligned typography hierarchy and Lucide architecture icons to the desktop auth panel.
+- Configured Clerk middleware and provider redirects to keep authentication on the local auth routes when hosted URLs are present in the pulled environment.
+- Corrected the middleware unauthenticated redirect to use an absolute request-based URL required by Clerk and Next.js.
+- Added the authenticated `/editor` route and root auth-based redirect.
+- Added Clerk's built-in `UserButton` to the editor navbar.
 
 ## In Progress
 
-- Editor base chrome implementation.
+- Clerk authentication implementation.
 
 ## Next Up
 
-- Add the project creation dialog and project data flow.
+- Verify the Clerk auth flow with `clerk doctor`, build, and a first test user.
 
 ## Open Questions
 
@@ -47,3 +59,4 @@ Update this file whenever the current phase, active feature, or implementation s
 - Verification passed with `npm.cmd run build` after allowing network access for `next/font/google`.
 - Corrected product naming from Ghost AI to Systemeta AI across app metadata, homepage, and context docs.
 - Implemented `context/feature-specs/02-editor.md`; lint and build verification pending.
+- Implemented `context/feature-specs/03-auth.md`; lint and production build verification passed after refreshing stale `.next` output.
