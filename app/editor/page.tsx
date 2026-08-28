@@ -3,10 +3,15 @@
 import { useState } from "react"
 
 import { EditorNavbar } from "@/components/editor/editor-navbar"
+import { ProjectDialogs } from "@/components/editor/project-dialogs"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
+import { useProjectDialogs } from "@/components/editor/use-project-dialogs"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 
 export default function EditorPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const projectDialogs = useProjectDialogs()
 
   return (
     <main className="min-h-screen bg-base text-copy-primary">
@@ -19,12 +24,26 @@ export default function EditorPage() {
       <ProjectSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        onDeleteProject={projectDialogs.openDeleteDialog}
+        onNewProject={projectDialogs.openCreateDialog}
+        onRenameProject={projectDialogs.openRenameDialog}
+        projects={projectDialogs.projects}
       />
       <section className="flex min-h-screen items-center justify-center px-6 pt-14">
-        <h1 className="text-center text-5xl font-semibold tracking-normal sm:text-7xl">
-          Systemeta AI
-        </h1>
+        <div className="max-w-xl text-center">
+          <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">
+            Create a project or open an existing one
+          </h1>
+          <p className="mt-4 text-base text-copy-secondary">
+            Start a new architecture workspace, or choose a project from the sidebar.
+          </p>
+          <Button className="mt-8" onClick={projectDialogs.openCreateDialog}>
+            <Plus />
+            New Project
+          </Button>
+        </div>
       </section>
+      <ProjectDialogs {...projectDialogs} />
     </main>
   )
 }

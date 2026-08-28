@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Authentication foundation
+- Project dialogs and editor home
 
 ## Current Goal
 
-- Complete the Clerk authentication flow from `context/feature-specs/03-auth.md`.
+- Complete the project dialog workflow from `context/feature-specs/04-project-dialogs.md`.
 
 ## Completed
 
@@ -34,14 +34,19 @@ Update this file whenever the current phase, active feature, or implementation s
 - Corrected the middleware unauthenticated redirect to use an absolute request-based URL required by Clerk and Next.js.
 - Added the authenticated `/editor` route and root auth-based redirect.
 - Added Clerk's built-in `UserButton` to the editor navbar.
+- Added the editor home empty state with create-project action.
+- Added mock owned and shared project data with ownership-aware sidebar actions.
+- Added the dedicated project dialog hook for dialog, form, and loading state.
+- Added create, rename, and delete project dialogs with slug preview and keyboard submission.
+- Added the mobile sidebar backdrop scrim and outside-click close behavior.
 
 ## In Progress
 
-- Clerk authentication implementation.
+- None.
 
 ## Next Up
 
-- Verify the Clerk auth flow with `clerk doctor`, build, and a first test user.
+- Read and implement `context/feature-specs/05-prisma.md`.
 
 ## Open Questions
 
@@ -60,3 +65,4 @@ Update this file whenever the current phase, active feature, or implementation s
 - Corrected product naming from Ghost AI to Systemeta AI across app metadata, homepage, and context docs.
 - Implemented `context/feature-specs/02-editor.md`; lint and build verification pending.
 - Implemented `context/feature-specs/03-auth.md`; lint and production build verification passed after refreshing stale `.next` output.
+- Implemented `context/feature-specs/04-project-dialogs.md`; lint and production build verification passed.
