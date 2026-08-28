@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Foundation setup
+- Editor foundation
 
 ## Current Goal
 
-- Complete the design system foundation from `context/feature-specs/01-design-system.md`.
+- Complete the base editor chrome from `context/feature-specs/02-editor.md`.
 
 ## Completed
 
@@ -19,14 +19,17 @@ Update this file whenever the current phase, active feature, or implementation s
 - Installed `lucide-react` through the shadcn dependency setup.
 - Aligned `app/globals.css` with Systemeta AI dark theme tokens and shadcn token aliases.
 - Restored documented Geist Sans and Geist Mono variables in the root layout.
+- Created the fixed editor navbar with a state-aware projects sidebar toggle.
+- Created the floating, sliding project sidebar with My Projects and Shared tabs.
+- Added the reusable editor dialog composition pattern for title, description, content, and footer actions.
 
 ## In Progress
 
-- None.
+- Editor base chrome implementation.
 
 ## Next Up
 
-- Begin the next feature unit from the feature specs.
+- Add the project creation dialog and project data flow.
 
 ## Open Questions
 
@@ -35,6 +38,7 @@ Update this file whenever the current phase, active feature, or implementation s
 ## Architecture Decisions
 
 - Use shadcn/ui generated primitives in `components/ui/` as protected foundation components.
+- Keep editor chrome as app-level compositions in `components/editor/`.
 
 ## Session Notes
 
@@ -42,3 +46,4 @@ Update this file whenever the current phase, active feature, or implementation s
 - Verification passed with `npm.cmd run lint`.
 - Verification passed with `npm.cmd run build` after allowing network access for `next/font/google`.
 - Corrected product naming from Ghost AI to Systemeta AI across app metadata, homepage, and context docs.
+- Implemented `context/feature-specs/02-editor.md`; lint and build verification pending.
