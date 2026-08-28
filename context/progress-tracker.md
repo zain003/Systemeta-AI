@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Project dialogs and editor home
+- Prisma data layer
 
 ## Current Goal
 
-- Complete the project dialog workflow from `context/feature-specs/04-project-dialogs.md`.
+- Complete the Prisma schema and data layer from `context/feature-specs/05-prisma.md`.
 
 ## Completed
 
@@ -39,6 +39,10 @@ Update this file whenever the current phase, active feature, or implementation s
 - Added the dedicated project dialog hook for dialog, form, and loading state.
 - Added create, rename, and delete project dialogs with slug preview and keyboard submission.
 - Added the mobile sidebar backdrop scrim and outside-click close behavior.
+- Added the Project and ProjectCollaborator Prisma models with required relations, indexes, and constraints.
+- Added the cached Prisma singleton with Prisma Postgres Accelerate and direct PostgreSQL adapter branches.
+- Created and applied the initial `init_project_data` migration.
+- Generated the Prisma client to `app/generated/prisma`.
 
 ## In Progress
 
@@ -46,7 +50,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Read and implement `context/feature-specs/05-prisma.md`.
+- Add authenticated project persistence and API routes.
 
 ## Open Questions
 
@@ -66,3 +70,4 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented `context/feature-specs/02-editor.md`; lint and build verification pending.
 - Implemented `context/feature-specs/03-auth.md`; lint and production build verification passed after refreshing stale `.next` output.
 - Implemented `context/feature-specs/04-project-dialogs.md`; lint and production build verification passed.
+- Implemented `context/feature-specs/05-prisma.md`; schema validation, migration status, lint, and production build verification passed.
