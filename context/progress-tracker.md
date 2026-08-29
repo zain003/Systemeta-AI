@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Project API backend routes
+- Editor workspace shell verification and refinement
 
 ## Current Goal
 
-- Complete the authenticated project backend API routes from `context/feature-specs/06-project-apis.md`.
+- Keep the `/editor/[roomId]` workspace shell aligned with the design spec, with the AI panel toggling from a single navbar control and the project room layout remaining build-clean and production-safe.
 
 ## Completed
 
@@ -46,25 +46,33 @@ Update this file whenever the current phase, active feature, or implementation s
 - Added the backend project API routes for list/create/rename/delete under `app/api/projects` and `app/api/projects/[projectId]`.
 - Enforced authenticated ownership checks so unauthenticated requests return `401` and non-owner rename/delete attempts return `403`.
 - Defaulted missing project names to `Untitled Project` when creating or renaming.
-- Verified the app builds successfully with `npm run build` after implementing the route handlers.
+- Added the access helper module at `lib/project-access.ts` with Clerk identity resolution and project access checks.
+- Created the `AccessDenied` shell component with the required lock state, message, and back-link.
+- Implemented the server-side `/editor/[roomId]` page with unauthenticated redirect, missing-project denial, and unauthorized-project denial.
+- Built the full-viewport project workspace shell with project navbar title, share/AI actions, project sidebar, current room highlight, canvas placeholder, and AI sidebar placeholder.
+- Fixed the false `AccessDenied` issue by replacing the mock project list with real backend-backed project fetch/create/rename/delete calls in `useProjectDialogs`.
+- Corrected the AI toggle behavior so the navbar has one control that opens and closes the AI panel, without the redundant extra sidebar control.
+- Verified the editor workspace shell remains production-build clean with `npm run build`.
 
 ## In Progress
 
-- None.
+- None; the current workspace-shell requirement is complete and verified.
 
 ## Next Up
 
-- None; the project API backend requirement is complete.
+- Optional: move from the static workspace shell into actual canvas/AI feature work once the room layout specification is approved.
 
 ## Open Questions
 
-- None.
+- None for the current spec-driven workspace shell implementation.
 
 ## Architecture Decisions
 
 - Use shadcn/ui generated primitives in `components/ui/` as protected foundation components.
 - Keep editor chrome as app-level compositions in `components/editor/`.
 - Keep backend-only project mutation logic in `app/api` and avoid UI wiring until the API layer is verified.
+- Keep access checks and project membership logic in `lib/project-access.ts` rather than in the page component.
+- Keep the room shell split across a server page and a client interactive shell so event handlers stay within client boundaries and the room remains valid in Next.js App Router.
 
 ## Session Notes
 
@@ -77,3 +85,6 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented `context/feature-specs/04-project-dialogs.md`; lint and production build verification passed.
 - Implemented `context/feature-specs/05-prisma.md`; schema validation, migration status, lint, and production build verification passed.
 - Implemented `context/feature-specs/06-project-apis.md`; production build verification passed after route creation and ownership enforcement.
+- Implemented `context/feature-specs/08-editor-workspace-shell.md`; production build verification passed after access gating and workspace shell layout were added.
+- Fixed false access denial by wiring the project dialogs to the real API-backed project list and creation flow, and verified the production build still passes.
+- Re-validated the current room shell after aligning the AI sidebar toggle behavior and the layout to the room-shell spec; the production build remains successful.
