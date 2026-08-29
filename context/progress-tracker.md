@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Editor home wiring complete; ready for next feature
+- Share dialog implementation complete; ready for next feature
 
 ## Current Goal
 
-- Maintain the editor home and workspace shell with production-ready API integration.
+- Maintain all implemented features with production-ready API integration and user management.
 
 ## Completed
 
@@ -59,14 +59,19 @@ Update this file whenever the current phase, active feature, or implementation s
 - Renamed and separated editor page into async server component (`app/editor/page.tsx`) and client component (`app/editor/editor-content.tsx`) to properly pass server-fetched data.
 - Updated `useProjectDialogs` hook to accept optional `initialProjects` prop and only fetch client-side if no initial data provided.
 - Verified 07-wire-editor-home implementation with `npm run build` passing successfully.
+- Created share-dialog component with owner/collaborator access levels and Clerk user enrichment.
+- Added API routes for listing, inviting, and removing collaborators with ownership enforcement.
+- Integrated Clerk Backend API to enrich collaborator emails with display names and avatars.
+- Wired share button to open share dialog from the workspace navbar.
+- Verified 09-share-dialog implementation with `npm run build` passing successfully.
 
 ## In Progress
 
-- None; the editor home wiring requirement is complete and verified.
+- None; the share dialog implementation is complete and verified.
 
 ## Next Up
 
-- Read and implement `context/feature-specs/09-canvas-workspace.md` or next planned feature.
+- Read and implement next planned feature from context/feature-specs/
 
 ## Open Questions
 
@@ -95,3 +100,4 @@ Update this file whenever the current phase, active feature, or implementation s
 - Fixed false access denial by wiring the project dialogs to the real API-backed project list and creation flow, and verified the production build still passes.
 - Re-validated the current room shell after aligning the AI sidebar toggle behavior and the layout to the room-shell spec; the production build remains successful.
 - Implemented `context/feature-specs/07-wire-editor-home.md`; converted editor page to server component with server-side project fetching, added create/delete navigation via useRouter, separated client and server components, and verified production build passes with `npm run build`.
+- Implemented `context/feature-specs/09-share-dialog.md`; created share dialog component with owner/collaborator role separation, added three API routes for collaborator management (list/invite/remove), integrated Clerk Backend API for user enrichment, and verified production build passes with `npm run build`.

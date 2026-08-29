@@ -52,6 +52,7 @@ export default async function EditorWorkspacePage({
 
   const accessibleProjects = await getAccessibleProjects(userId, primaryEmail)
   const sidebarProjects = accessibleProjects.map((item) => toSidebarProject(item, userId))
+  const isOwner = project.ownerId === userId
 
-  return <WorkspaceShell project={project} projects={sidebarProjects} />
+  return <WorkspaceShell project={project} projects={sidebarProjects} isOwner={isOwner} userId={userId} />
 }
