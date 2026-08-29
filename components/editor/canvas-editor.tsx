@@ -1,6 +1,6 @@
 "use client"
 
-import { LiveMap } from "@liveblocks/core"
+import { LiveMap, LiveObject } from "@liveblocks/core"
 import { LiveblocksProvider, RoomProvider, ClientSideSuspense } from "@liveblocks/react"
 
 import { Canvas } from "@/components/editor/canvas"
@@ -33,10 +33,10 @@ export function CanvasEditor({ roomId }: CanvasEditorProps) {
           cursor: null,
         }}
         initialStorage={{
-          flow: {
+          flow: new LiveObject({
             nodes: new LiveMap(),
             edges: new LiveMap(),
-          },
+          }),
         } as unknown as Liveblocks["Storage"]}
       >
         <ClientSideSuspense fallback={<LoadingCanvas />}>

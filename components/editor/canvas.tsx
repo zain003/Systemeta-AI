@@ -4,6 +4,7 @@ import {
   Background,
   Controls,
   MiniMap,
+  NodeResizer,
   ConnectionMode,
   ReactFlow,
   ReactFlowProvider,
@@ -13,15 +14,18 @@ import {
 import { LiveList, LiveMap, LiveObject, type LsonObject } from "@liveblocks/core"
 import { useMutation } from "@liveblocks/react"
 import { useLiveblocksFlow } from "@liveblocks/react-flow"
-import { useCallback, useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "react"
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent as ReactDragEvent, type KeyboardEvent, type MouseEvent } from "react"
 
 import {
   NODE_COLORS,
   NODE_SHAPES,
   type CanvasEdge,
   type CanvasNode,
+  type CanvasNodeData,
   type CanvasNodeShape,
 } from "@/types/canvas"
+
+const canvasNodeTypes = { canvasNode: CanvasNodeRenderer }
 
 import "@xyflow/react/dist/style.css"
 
@@ -42,9 +46,10 @@ interface ShapeVisualProps {
   label?: string
   selected?: boolean
   preview?: boolean
+  onDoubleClick?: (event: MouseEvent<HTMLDivElement>) => void
 }
 
-function ShapeVisual({ shape, width, height, fill, label, selected = false, preview = false }: ShapeVisualProps) {
+function ShapeVisual({ shape, width, height, fill, label, selected = false, preview = false, onDoubleClick }: ShapeVisualProps) {
   const stroke = selected ? "#f8fafc" : "rgba(148, 163, 184, 0.9)"
   const isSvgShape = shape === "diamond" || shape === "hexagon" || shape === "cylinder"
 
@@ -57,7 +62,7 @@ function ShapeVisual({ shape, width, height, fill, label, selected = false, prev
           : "M 5 16 C 5 8 95 8 95 16 L 95 84 C 95 92 5 92 5 84 Z"
 
     return (
-      <div className={`relative ${preview ? "opacity-65" : ""}`} style={{ width, height }}>
+      <div className={`relative ${preview ? "opacity-65" : ""}`} style={{ width, height }} onDoubleClick={onDoubleClick}>
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {shape === "cylinder" && <ellipse cx="50" cy="16" rx="45" ry="8" fill={fill} stroke={stroke} strokeWidth={selected ? 2 : 1.5} />}
           <path d={path} fill={fill} stroke={stroke} strokeWidth={selected ? 2 : 1.5} vectorEffect="non-scaling-stroke" />
@@ -79,6 +84,7 @@ function ShapeVisual({ shape, width, height, fill, label, selected = false, prev
         boxShadow: selected ? `0 0 0 2px ${fill}` : "0 12px 24px rgba(15, 23, 42, 0.24)",
         borderRadius: shape === "circle" || shape === "pill" ? "9999px" : "16px",
       }}
+      onDoubleClick={onDoubleClick}
     >
       {label && <ShapeLabel label={label} />}
     </div>
@@ -89,18 +95,91 @@ function ShapeLabel({ label }: { label: string }) {
   return <div className="relative z-10 px-3 text-sm leading-tight tracking-wide text-white">{label}</div>
 }
 
-function CanvasNodeRenderer({ data, selected }: NodeProps<CanvasNode>) {
+function CanvasNodeRenderer({ id, data, selected, width: measuredWidth, height: measuredHeight }: NodeProps<CanvasNode>) {
   const option = NODE_SHAPES.find((item) => item.name === data.shape) ?? NODE_SHAPES[0]
+  const [isEditing, setIsEditing] = useState(false)
+  const [draftLabel, setDraftLabel] = useState(data.label)
+  const updateNodeData = useMutation(({ storage }, update: { id: string; data: CanvasNodeData }) => {
+    const flow = storage.get("flow") as unknown
+
+    if (!flow || typeof flow !== "object" || !(flow as { get?: unknown }).get || typeof (flow as { get: unknown }).get !== "function") {
+      return
+    }
+
+    const node = (flow as { get: (key: "nodes") => { get: (id: string) => { set: (key: string, value: unknown) => void } | undefined } }).get("nodes").get(update.id)
+
+    if (node) {
+      node.set("data", update.data)
+    }
+  }, [])
+
+  const finishEditing = () => {
+    setIsEditing(false)
+    if (draftLabel !== data.label) {
+      updateNodeData({ id, data: { ...data, label: draftLabel } })
+    }
+  }
+
+  const handleLabelChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    const nextLabel = event.target.value
+    setDraftLabel(nextLabel)
+    updateNodeData({ id, data: { ...data, label: nextLabel } })
+  }
+
+  const handleLabelKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Escape") {
+      setDraftLabel(data.label)
+      setIsEditing(false)
+    }
+  }
+
+  const handleResize = useCallback(
+    (_event: unknown, params: { width: number; height: number }) => {
+      updateNodeData({ id, data: { ...data, size: { width: params.width, height: params.height } } })
+    },
+    [data, id, updateNodeData],
+  )
+  const width = measuredWidth ?? data.size?.width ?? option.size.width
+  const height = measuredHeight ?? data.size?.height ?? option.size.height
 
   return (
-    <ShapeVisual
-      shape={data.shape ?? "rectangle"}
-      width={data.size?.width ?? option.size.width}
-      height={data.size?.height ?? option.size.height}
-      fill={data.color ?? NODE_COLORS[0].fill}
-      label={data.label || "Untitled"}
-      selected={selected}
-    />
+    <>
+      <NodeResizer
+        isVisible={selected}
+        minWidth={80}
+        minHeight={50}
+        color="var(--accent-primary)"
+        handleStyle={{ width: 8, height: 8, borderRadius: "3px", background: "var(--bg-surface)", border: "1px solid var(--accent-primary)" }}
+        lineStyle={{ borderColor: "var(--accent-primary)" }}
+        onResize={handleResize}
+      />
+      <ShapeVisual
+        shape={data.shape ?? "rectangle"}
+        width={width}
+        height={height}
+        fill={data.color ?? NODE_COLORS[0].fill}
+        label={isEditing ? undefined : data.label || "Untitled"}
+        selected={selected}
+        onDoubleClick={(event) => {
+          event.stopPropagation()
+          setDraftLabel(data.label)
+          setIsEditing(true)
+        }}
+      />
+      {isEditing && (
+        <textarea
+          autoFocus
+          value={draftLabel}
+          onChange={handleLabelChange}
+          onBlur={finishEditing}
+          onKeyDown={handleLabelKeyDown}
+          onPointerDown={(event) => event.stopPropagation()}
+          className="nodrag nopan absolute inset-1 z-20 resize-none overflow-hidden rounded-md border border-accent-primary bg-surface/90 px-3 py-2 text-center text-sm leading-tight text-copy-primary outline-none"
+          placeholder="Untitled"
+          aria-label="Node label"
+        />
+      )}
+    </>
   )
 }
 
@@ -121,8 +200,8 @@ function CanvasInner() {
     }
 
     const flow = storedFlow as {
-      get?: (key: "nodes" | "edges") => unknown
-      set?: (key: "nodes" | "edges", value: unknown) => void
+      get?: unknown
+      set?: unknown
       nodes?: unknown
       edges?: unknown
     }
@@ -156,8 +235,13 @@ function CanvasInner() {
       return
     }
 
-    const nodes = flow.get("nodes") as unknown
-    const edges = flow.get("edges") as unknown
+    const liveFlow = flow as {
+      get: (key: "nodes" | "edges") => unknown
+      set: (key: "nodes" | "edges", value: unknown) => void
+    }
+
+    const nodes = liveFlow.get("nodes") as unknown
+    const edges = liveFlow.get("edges") as unknown
 
     if (nodes instanceof LiveList) {
       const legacyNodes = nodes as unknown as LiveList<LiveObject<LsonObject>>
@@ -172,7 +256,7 @@ function CanvasInner() {
         }
       })
 
-      flow.set("nodes", migratedNodes)
+      liveFlow.set("nodes", migratedNodes)
     }
 
     if (edges instanceof LiveList) {
@@ -188,7 +272,7 @@ function CanvasInner() {
         }
       })
 
-      flow.set("edges", migratedEdges)
+      liveFlow.set("edges", migratedEdges)
     }
   }, [])
 
@@ -318,7 +402,7 @@ function CanvasInner() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        nodeTypes={{ canvasNode: CanvasNodeRenderer }}
+        nodeTypes={canvasNodeTypes}
         connectionMode={ConnectionMode.Loose}
         fitView
       >

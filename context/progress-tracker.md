@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Node shape rendering and drag preview complete and verified
+- Node resizing and inline label editing complete and verified
 
 ## Current Goal
 
@@ -67,7 +67,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- Node editing with resize and inline labels is implemented locally and will be committed separately.
+- No active implementation blockers; the next canvas enhancement is queued for the next feature spec.
 
 ## Next Up
 
@@ -114,4 +114,5 @@ Update this file whenever the current phase, active feature, or implementation s
 - Resolved the project lint errors by correcting const usage, stabilizing project and collaborator loading effects, and replacing the invalid empty RoomEvent type. Lint now passes with only the existing external-avatar `<img>` performance warning; production build passes.
 - Implemented `context/feature-specs/13-node-shape.md`; replaced placeholder nodes with CSS rectangle, pill, and circle shapes plus scalable SVG diamond, hexagon, and cylinder shapes, added selected-state borders, and added a matching cursor-following ghost preview for shape drags. Verified with `npm run build` and `npm run lint` (only the existing external-avatar `<img>` warning remains).
 - Completed the node-shape follow-up by tracking native dragover events globally so the ghost preview remains attached to the cursor across the canvas, clearing it on drag cancellation, and removing duplicate legacy migration writes. Re-verified with `npm run build` and `npm run lint`.
-- Prepared the feature-13 commit boundary; feature 14 node editing remains implemented in the working tree for the next commit.
+- Prepared the feature-13 commit boundary; completed implementation of `context/feature-specs/14-node-editing.md` with resize handles, inline label editing, blur/Escape close behavior, and collaborative state updates through the existing Liveblocks flow.
+- Verified the node-editing work with `npm run build` and kept the canvas logic within the existing collaborative node state flow and prior shape-rendering scope.
