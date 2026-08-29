@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Copy, Trash2, X } from "lucide-react"
+import { Copy, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -37,13 +37,7 @@ export function ShareDialog({
 
   const projectUrl = typeof window !== "undefined" ? `${window.location.origin}/editor/${projectId}` : ""
 
-  useEffect(() => {
-    if (isOpen) {
-      loadCollaborators()
-    }
-  }, [isOpen])
-
-  async function loadCollaborators() {
+  const loadCollaborators = useCallback(async () => {
     setLoadingCollaborators(true)
     try {
       const response = await fetch(`/api/projects/${projectId}/collaborators`)
@@ -56,7 +50,13 @@ export function ShareDialog({
     } finally {
       setLoadingCollaborators(false)
     }
-  }
+  }, [projectId])
+
+  useEffect(() => {
+    if (isOpen) {
+      void Promise.resolve().then(loadCollaborators)
+    }
+  }, [isOpen, loadCollaborators])
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault()

@@ -105,3 +105,47 @@
     margin: 0;
   }
 }
+
+.canvas-controls {
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 0.75rem;
+  background: var(--bg-surface);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
+}
+
+.canvas-controls .react-flow__controls-button {
+  width: 32px;
+  height: 32px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  fill: currentColor;
+}
+
+.canvas-controls .react-flow__controls-button:last-child {
+  border-bottom: 0;
+}
+
+.canvas-controls .react-flow__controls-button:hover {
+  background: var(--bg-elevated);
+  color: var(--accent-primary);
+}
+
+.canvas-minimap {
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 0.75rem;
+  background: var(--bg-surface);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
+}
+
+.canvas-minimap .react-flow__minimap-mask {
+  fill: var(--bg-base);
+  fill-opacity: 0.76;
+}
+
+.canvas-minimap .react-flow__minimap-node {
+  fill: var(--accent-primary);
+  stroke: var(--border-subtle);
+}

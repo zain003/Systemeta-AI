@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import type { Project } from "@/components/editor/project-types"
 
@@ -26,10 +26,6 @@ function normalizeProject(project: { id: string; name: string; ownerId?: string 
   }
 }
 
-interface UseProjectDialogsProps {
-  initialProjects?: Project[]
-}
-
 export function useProjectDialogs(initialProjects: Project[] = []) {
   const router = useRouter()
   const [projects, setProjects] = useState<Project[]>(initialProjects)
@@ -40,13 +36,7 @@ export function useProjectDialogs(initialProjects: Project[] = []) {
 
   const slugPreview = useMemo(() => createSlug(projectName), [projectName])
 
-  useEffect(() => {
-    if (initialProjects.length === 0) {
-      void loadProjects()
-    }
-  }, [])
-
-  async function loadProjects() {
+  const loadProjects = useCallback(async () => {
     const response = await fetch("/api/projects")
 
     if (!response.ok) {
@@ -56,7 +46,13 @@ export function useProjectDialogs(initialProjects: Project[] = []) {
 
     const payload = (await response.json()) as Array<{ id: string; name: string; ownerId: string }>
     setProjects(payload.map(normalizeProject))
-  }
+  }, [])
+
+  useEffect(() => {
+    if (initialProjects.length === 0) {
+      void Promise.resolve().then(loadProjects)
+    }
+  }, [initialProjects.length, loadProjects])
 
   function openCreateDialog() {
     setSelectedProject(null)

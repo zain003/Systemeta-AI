@@ -118,7 +118,7 @@ export async function POST(
     })
 
     // Enrich with Clerk data
-    let enrichedData: Record<string, unknown> = {
+    const enrichedData: Record<string, unknown> = {
       id: collaborator.id,
       email: collaborator.collaboratorEmail,
     }

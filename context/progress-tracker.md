@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Liveblocks canvas foundation implementation complete; ready for next feature
+- Shape panel drag-and-drop interaction complete and verified
 
 ## Current Goal
 
-- Maintain the verified collaborative editor foundation and continue with the next canvas feature in the project backlog.
+- Maintain the verified collaborative editor foundation while preparing the next canvas enhancement in the project backlog.
 
 ## Completed
 
@@ -67,7 +67,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- None; the share dialog implementation is complete and verified.
+- None; the shape panel drag-and-drop implementation is complete and verified.
 
 ## Next Up
 
@@ -102,3 +102,13 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented `context/feature-specs/07-wire-editor-home.md`; converted editor page to server component with server-side project fetching, added create/delete navigation via useRouter, separated client and server components, and verified production build passes with `npm run build`.
 - Implemented `context/feature-specs/09-share-dialog.md`; created share dialog component with owner/collaborator role separation, added three API routes for collaborator management (list/invite/remove), integrated Clerk Backend API for user enrichment, and verified production build passes with `npm run build`.
 - Implemented `context/feature-specs/10-liveblocks-setup.md` and `context/feature-specs/11-base-canvas.md`; fixed the Liveblocks auth response parsing, added the required room storage seed, aligned the shared canvas types with the installed React Flow package, and verified the production build remains passing with `npm run build`.
+- Implemented `context/feature-specs/12-shape-panel.md`; added the floating shape toolbar, draggable shape payloads with default sizing, react-flow drag/drop node creation, and the custom canvas node renderer. Verified the production build still passes with `npm run build`.
+- Implemented direct press-and-hold shape dragging with a cursor-following preview, document-level release/cancel handling, and placement only when released over the React Flow canvas. Removed the unwanted React Flow minimap panel. Re-verified with `npm run build`.
+- Fixed the Liveblocks `ow.get is not a function` node-add failure by initializing flow storage with `LiveObject` and `LiveMap`, and added migration for rooms created with legacy array-backed storage. Re-verified with `npm run build`.
+- Completed the remaining shape-panel specification path with native draggable toolbar buttons, shape-and-size payload validation, canvas `dragover`/`drop` handling, release-coordinate conversion through React Flow, default-colored custom nodes, and timestamp-plus-counter IDs. Verified with `npm run build`.
+- Hardened legacy flow migration to handle plain-object storage as well as LiveObject storage, preventing `flow.get is not a function` during room initialization. Verified with `npm run build`.
+- Removed React Flow's default white Controls widget from the canvas so its zoom and navigation panel no longer obstructs the lower-left workspace.
+- Refined the shape panel into a compact bottom-right floating tool with actual styled previews for all six supported shapes instead of Unicode glyphs.
+- Restored the shape toolbar to its original bottom-center pill and styled React Flow navigation controls as a dark rounded widget at the bottom-right.
+- Restored the React Flow MiniMap at the bottom-right and styled its canvas, mask, and node previews with the dark workspace tokens; kept zoom controls separate at the bottom-left.
+- Resolved the project lint errors by correcting const usage, stabilizing project and collaborator loading effects, and replacing the invalid empty RoomEvent type. Lint now passes with only the existing external-avatar `<img>` performance warning; production build passes.
