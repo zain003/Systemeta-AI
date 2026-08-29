@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Share2, Sparkles } from "lucide-react"
+import { Share2 } from "lucide-react"
 
 import { EditorNavbar } from "@/components/editor/editor-navbar"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
 import { ShareDialog } from "@/components/editor/share-dialog"
+import { CanvasEditor } from "@/components/editor/canvas-editor"
 import type { Project } from "@/components/editor/project-types"
 import { Button } from "@/components/ui/button"
 
@@ -60,17 +61,7 @@ export function WorkspaceShell({ project, projects, isOwner = false }: Workspace
       />
 
       <section className="flex h-[calc(100vh-3.5rem)] pt-14">
-        <div className="flex min-w-0 flex-1 items-center justify-center bg-base px-6 py-10">
-          <div className="max-w-xl text-center">
-            <p className="text-xs font-medium uppercase tracking-[0.28em] text-copy-faint">Workspace</p>
-            <h1 className="mt-4 text-3xl font-semibold tracking-normal text-copy-primary sm:text-4xl">
-              {project.name}
-            </h1>
-            <p className="mt-3 text-sm text-copy-secondary">
-              The design canvas and room tools will appear here.
-            </p>
-          </div>
-        </div>
+        <CanvasEditor roomId={project.id} />
 
         <aside
           className={`overflow-hidden border-l border-surface-border bg-surface/80 transition-all duration-200 ${
