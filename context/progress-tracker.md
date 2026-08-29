@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Shape panel drag-and-drop interaction complete and verified
+- Node shape rendering and drag preview complete and verified
 
 ## Current Goal
 
@@ -67,7 +67,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- None; the shape panel drag-and-drop implementation is complete and verified.
+- Node editing with resize and inline labels is implemented locally and will be committed separately.
 
 ## Next Up
 
@@ -112,3 +112,6 @@ Update this file whenever the current phase, active feature, or implementation s
 - Restored the shape toolbar to its original bottom-center pill and styled React Flow navigation controls as a dark rounded widget at the bottom-right.
 - Restored the React Flow MiniMap at the bottom-right and styled its canvas, mask, and node previews with the dark workspace tokens; kept zoom controls separate at the bottom-left.
 - Resolved the project lint errors by correcting const usage, stabilizing project and collaborator loading effects, and replacing the invalid empty RoomEvent type. Lint now passes with only the existing external-avatar `<img>` performance warning; production build passes.
+- Implemented `context/feature-specs/13-node-shape.md`; replaced placeholder nodes with CSS rectangle, pill, and circle shapes plus scalable SVG diamond, hexagon, and cylinder shapes, added selected-state borders, and added a matching cursor-following ghost preview for shape drags. Verified with `npm run build` and `npm run lint` (only the existing external-avatar `<img>` warning remains).
+- Completed the node-shape follow-up by tracking native dragover events globally so the ghost preview remains attached to the cursor across the canvas, clearing it on drag cancellation, and removing duplicate legacy migration writes. Re-verified with `npm run build` and `npm run lint`.
+- Prepared the feature-13 commit boundary; feature 14 node editing remains implemented in the working tree for the next commit.

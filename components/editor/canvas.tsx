@@ -13,7 +13,7 @@ import {
 import { LiveList, LiveMap, LiveObject, type LsonObject } from "@liveblocks/core"
 import { useMutation } from "@liveblocks/react"
 import { useLiveblocksFlow } from "@liveblocks/react-flow"
-import { useCallback, useEffect, useRef, type DragEvent } from "react"
+import { useCallback, useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "react"
 
 import {
   NODE_COLORS,
@@ -34,33 +34,73 @@ interface ShapeDragPayload {
   }
 }
 
-function CanvasNodeRenderer({ data, selected }: NodeProps<CanvasNode>) {
-  const fill = data.color ?? NODE_COLORS[0].fill
-  const width = data.size?.width ?? 180
-  const height = data.size?.height ?? 90
+interface ShapeVisualProps {
+  shape: CanvasNodeShape
+  width: number
+  height: number
+  fill: string
+  label?: string
+  selected?: boolean
+  preview?: boolean
+}
+
+function ShapeVisual({ shape, width, height, fill, label, selected = false, preview = false }: ShapeVisualProps) {
+  const stroke = selected ? "#f8fafc" : "rgba(148, 163, 184, 0.9)"
+  const isSvgShape = shape === "diamond" || shape === "hexagon" || shape === "cylinder"
+
+  if (isSvgShape) {
+    const path =
+      shape === "diamond"
+        ? "M 50 2 L 98 50 L 50 98 L 2 50 Z"
+        : shape === "hexagon"
+          ? "M 25 3 L 75 3 L 98 50 L 75 97 L 25 97 L 2 50 Z"
+          : "M 5 16 C 5 8 95 8 95 16 L 95 84 C 95 92 5 92 5 84 Z"
+
+    return (
+      <div className={`relative ${preview ? "opacity-65" : ""}`} style={{ width, height }}>
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          {shape === "cylinder" && <ellipse cx="50" cy="16" rx="45" ry="8" fill={fill} stroke={stroke} strokeWidth={selected ? 2 : 1.5} />}
+          <path d={path} fill={fill} stroke={stroke} strokeWidth={selected ? 2 : 1.5} vectorEffect="non-scaling-stroke" />
+          {shape === "cylinder" && <path d="M 5 84 C 5 92 95 92 95 84" fill="none" stroke={stroke} strokeWidth={selected ? 2 : 1.5} vectorEffect="non-scaling-stroke" />}
+        </svg>
+        {label && <ShapeLabel label={label} />}
+      </div>
+    )
+  }
 
   return (
     <div
-      className="flex h-full w-full items-center justify-center rounded-xl border-2 text-center font-medium text-white shadow-lg"
+      className={`relative flex items-center justify-center border-2 text-center font-medium text-white shadow-lg ${preview ? "opacity-65" : ""}`}
       style={{
         width,
         height,
         background: `linear-gradient(135deg, ${fill}, rgba(15, 23, 42, 0.92))`,
-        borderColor: selected ? "#f8fafc" : "rgba(148, 163, 184, 0.9)",
+        borderColor: stroke,
         boxShadow: selected ? `0 0 0 2px ${fill}` : "0 12px 24px rgba(15, 23, 42, 0.24)",
-        borderRadius: data.shape === "circle" ? "9999px" : data.shape === "pill" ? "9999px" : data.shape === "diamond" ? "0px" : data.shape === "hexagon" ? "18px" : "16px",
-        clipPath:
-          data.shape === "diamond"
-            ? "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)"
-            : data.shape === "hexagon"
-              ? "polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%)"
-              : "none",
+        borderRadius: shape === "circle" || shape === "pill" ? "9999px" : "16px",
       }}
     >
-      <div className="px-3 text-sm leading-tight tracking-wide" style={{ color: "#f8fafc" }}>
-        {data.label || "Untitled"}
-      </div>
+      {label && <ShapeLabel label={label} />}
     </div>
+  )
+}
+
+function ShapeLabel({ label }: { label: string }) {
+  return <div className="relative z-10 px-3 text-sm leading-tight tracking-wide text-white">{label}</div>
+}
+
+function CanvasNodeRenderer({ data, selected }: NodeProps<CanvasNode>) {
+  const option = NODE_SHAPES.find((item) => item.name === data.shape) ?? NODE_SHAPES[0]
+
+  return (
+    <ShapeVisual
+      shape={data.shape ?? "rectangle"}
+      width={data.size?.width ?? option.size.width}
+      height={data.size?.height ?? option.size.height}
+      fill={data.color ?? NODE_COLORS[0].fill}
+      label={data.label || "Untitled"}
+      selected={selected}
+    />
   )
 }
 
@@ -70,6 +110,8 @@ function CanvasInner() {
   })
   const { screenToFlowPosition } = useReactFlow()
   const nodeCounter = useRef(0)
+  const [draggingShape, setDraggingShape] = useState<ShapeDragPayload | null>(null)
+  const [dragPreview, setDragPreview] = useState<{ x: number; y: number } | null>(null)
 
   const migrateLegacyFlowStorage = useMutation(({ storage }) => {
     const storedFlow = storage.get("flow") as unknown
@@ -130,7 +172,6 @@ function CanvasInner() {
         }
       })
 
-      flow.set("nodes", migratedNodes as unknown as typeof nodes)
       flow.set("nodes", migratedNodes)
     }
 
@@ -147,7 +188,6 @@ function CanvasInner() {
         }
       })
 
-      flow.set("edges", migratedEdges as unknown as typeof edges)
       flow.set("edges", migratedEdges)
     }
   }, [])
@@ -189,7 +229,7 @@ function CanvasInner() {
     [nodeCounter, onNodesChange, screenToFlowPosition],
   )
 
-  const handleShapeDragStart = (event: DragEvent<HTMLButtonElement>, shape: CanvasNodeShape) => {
+  const handleShapeDragStart = (event: ReactDragEvent<HTMLButtonElement>, shape: CanvasNodeShape) => {
     const option = NODE_SHAPES.find((item) => item.name === shape)
     const payload: ShapeDragPayload = {
       type: "shape",
@@ -199,17 +239,53 @@ function CanvasInner() {
 
     event.dataTransfer.effectAllowed = "copy"
     event.dataTransfer.setData("application/x-systemeta-shape", JSON.stringify(payload))
+    setDraggingShape(payload)
+    setDragPreview({ x: event.clientX, y: event.clientY })
   }
 
-  const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+  const handleDragOver = useCallback((event: ReactDragEvent<HTMLDivElement>) => {
     if (event.dataTransfer.types.includes("application/x-systemeta-shape")) {
       event.preventDefault()
       event.dataTransfer.dropEffect = "copy"
+      setDragPreview({ x: event.clientX, y: event.clientY })
     }
   }, [])
 
+  useEffect(() => {
+    if (!draggingShape) {
+      return
+    }
+
+    const handleWindowDragOver = (event: globalThis.DragEvent) => {
+      if (!event.dataTransfer || !event.dataTransfer.types.includes("application/x-systemeta-shape")) {
+        return
+      }
+
+      event.preventDefault()
+      setDragPreview({ x: event.clientX, y: event.clientY })
+    }
+
+    const clearDragPreview = () => {
+      setDraggingShape(null)
+      setDragPreview(null)
+    }
+
+    window.addEventListener("dragover", handleWindowDragOver, true)
+    window.addEventListener("dragend", clearDragPreview, true)
+
+    return () => {
+      window.removeEventListener("dragover", handleWindowDragOver, true)
+      window.removeEventListener("dragend", clearDragPreview, true)
+    }
+  }, [draggingShape])
+
+  const handleDragEnd = useCallback(() => {
+    setDraggingShape(null)
+    setDragPreview(null)
+  }, [])
+
   const handleDrop = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
+    (event: ReactDragEvent<HTMLDivElement>) => {
       const serializedPayload = event.dataTransfer.getData("application/x-systemeta-shape")
 
       if (!serializedPayload) {
@@ -227,6 +303,9 @@ function CanvasInner() {
       } catch {
         return
       }
+
+      setDraggingShape(null)
+      setDragPreview(null)
     },
     [createNodeFromShape],
   )
@@ -248,6 +327,19 @@ function CanvasInner() {
         <MiniMap position="bottom-right" className="canvas-minimap" />
       </ReactFlow>
 
+      {draggingShape && dragPreview && (
+        <div className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2" style={{ left: dragPreview.x, top: dragPreview.y }}>
+          <ShapeVisual
+            shape={draggingShape.shape}
+            width={draggingShape.size.width}
+            height={draggingShape.size.height}
+            fill={NODE_COLORS[0].fill}
+            label=""
+            preview
+          />
+        </div>
+      )}
+
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full border border-surface-border bg-surface/85 px-3 py-2 shadow-lg backdrop-blur-sm">
         <div className="flex items-center gap-2">
           {NODE_SHAPES.map((shape) => (
@@ -256,6 +348,7 @@ function CanvasInner() {
               type="button"
               draggable
               onDragStart={(event) => handleShapeDragStart(event, shape.name)}
+              onDragEnd={handleDragEnd}
               className="flex h-12 w-12 select-none items-center justify-center rounded-full border border-surface-border bg-surface-muted text-lg text-copy-primary transition hover:border-accent-primary hover:bg-surface-elevated"
               title={shape.label}
               aria-label={`Add ${shape.label}`}
