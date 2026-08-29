@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Editor workspace shell verification and refinement
+- Editor home wiring complete; ready for next feature
 
 ## Current Goal
 
-- Keep the `/editor/[roomId]` workspace shell aligned with the design spec, with the AI panel toggling from a single navbar control and the project room layout remaining build-clean and production-safe.
+- Maintain the editor home and workspace shell with production-ready API integration.
 
 ## Completed
 
@@ -53,14 +53,20 @@ Update this file whenever the current phase, active feature, or implementation s
 - Fixed the false `AccessDenied` issue by replacing the mock project list with real backend-backed project fetch/create/rename/delete calls in `useProjectDialogs`.
 - Corrected the AI toggle behavior so the navbar has one control that opens and closes the AI panel, without the redundant extra sidebar control.
 - Verified the editor workspace shell remains production-build clean with `npm run build`.
+- Implemented server-side project fetching in `/editor/page.tsx` using `getAccessibleProjects` to fetch owned and shared projects before rendering.
+- Wired create project to navigate to `/editor/[projectId]` after successful API call via `useRouter.push()`.
+- Wired delete project to redirect to `/editor` after successful deletion via `useRouter.push()`.
+- Renamed and separated editor page into async server component (`app/editor/page.tsx`) and client component (`app/editor/editor-content.tsx`) to properly pass server-fetched data.
+- Updated `useProjectDialogs` hook to accept optional `initialProjects` prop and only fetch client-side if no initial data provided.
+- Verified 07-wire-editor-home implementation with `npm run build` passing successfully.
 
 ## In Progress
 
-- None; the current workspace-shell requirement is complete and verified.
+- None; the editor home wiring requirement is complete and verified.
 
 ## Next Up
 
-- Optional: move from the static workspace shell into actual canvas/AI feature work once the room layout specification is approved.
+- Read and implement `context/feature-specs/09-canvas-workspace.md` or next planned feature.
 
 ## Open Questions
 
@@ -88,3 +94,4 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented `context/feature-specs/08-editor-workspace-shell.md`; production build verification passed after access gating and workspace shell layout were added.
 - Fixed false access denial by wiring the project dialogs to the real API-backed project list and creation flow, and verified the production build still passes.
 - Re-validated the current room shell after aligning the AI sidebar toggle behavior and the layout to the room-shell spec; the production build remains successful.
+- Implemented `context/feature-specs/07-wire-editor-home.md`; converted editor page to server component with server-side project fetching, added create/delete navigation via useRouter, separated client and server components, and verified production build passes with `npm run build`.
