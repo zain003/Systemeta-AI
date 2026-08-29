@@ -62,7 +62,12 @@ function ShapeVisual({ shape, width, height, fill, label, selected = false, prev
           : "M 5 16 C 5 8 95 8 95 16 L 95 84 C 95 92 5 92 5 84 Z"
 
     return (
-      <div className={`relative ${preview ? "opacity-65" : ""}`} style={{ width, height }} onDoubleClick={onDoubleClick}>
+      <div
+        className={`relative ${preview ? "opacity-65" : ""}`}
+        style={{ width, height, display: "flex", alignItems: "center", justifyContent: "center" }}
+        onDoubleClick={onDoubleClick}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {shape === "cylinder" && <ellipse cx="50" cy="16" rx="45" ry="8" fill={fill} stroke={stroke} strokeWidth={selected ? 2 : 1.5} />}
           <path d={path} fill={fill} stroke={stroke} strokeWidth={selected ? 2 : 1.5} vectorEffect="non-scaling-stroke" />
@@ -85,6 +90,7 @@ function ShapeVisual({ shape, width, height, fill, label, selected = false, prev
         borderRadius: shape === "circle" || shape === "pill" ? "9999px" : "16px",
       }}
       onDoubleClick={onDoubleClick}
+      onMouseDown={(event) => event.stopPropagation()}
     >
       {label && <ShapeLabel label={label} />}
     </div>
@@ -92,7 +98,7 @@ function ShapeVisual({ shape, width, height, fill, label, selected = false, prev
 }
 
 function ShapeLabel({ label }: { label: string }) {
-  return <div className="relative z-10 px-3 text-sm leading-tight tracking-wide text-white">{label}</div>
+  return <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-3 text-center text-sm leading-tight tracking-wide text-white">{label}</div>
 }
 
 function CanvasNodeRenderer({ id, data, selected, width: measuredWidth, height: measuredHeight }: NodeProps<CanvasNode>) {
@@ -128,6 +134,8 @@ function CanvasNodeRenderer({ id, data, selected, width: measuredWidth, height: 
 
   const handleLabelKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Escape") {
+      event.preventDefault()
+      event.stopPropagation()
       setDraftLabel(data.label)
       setIsEditing(false)
     }
@@ -161,8 +169,9 @@ function CanvasNodeRenderer({ id, data, selected, width: measuredWidth, height: 
         label={isEditing ? undefined : data.label || "Untitled"}
         selected={selected}
         onDoubleClick={(event) => {
+          event.preventDefault()
           event.stopPropagation()
-          setDraftLabel(data.label)
+          setDraftLabel(data.label ?? "")
           setIsEditing(true)
         }}
       />
@@ -173,10 +182,12 @@ function CanvasNodeRenderer({ id, data, selected, width: measuredWidth, height: 
           onChange={handleLabelChange}
           onBlur={finishEditing}
           onKeyDown={handleLabelKeyDown}
+          onMouseDown={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
           className="nodrag nopan absolute inset-1 z-20 resize-none overflow-hidden rounded-md border border-accent-primary bg-surface/90 px-3 py-2 text-center text-sm leading-tight text-copy-primary outline-none"
           placeholder="Untitled"
           aria-label="Node label"
+          style={{ inset: 6 }}
         />
       )}
     </>
