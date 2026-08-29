@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Prisma data layer
+- Project API backend routes
 
 ## Current Goal
 
-- Complete the Prisma schema and data layer from `context/feature-specs/05-prisma.md`.
+- Complete the authenticated project backend API routes from `context/feature-specs/06-project-apis.md`.
 
 ## Completed
 
@@ -43,6 +43,10 @@ Update this file whenever the current phase, active feature, or implementation s
 - Added the cached Prisma singleton with Prisma Postgres Accelerate and direct PostgreSQL adapter branches.
 - Created and applied the initial `init_project_data` migration.
 - Generated the Prisma client to `app/generated/prisma`.
+- Added the backend project API routes for list/create/rename/delete under `app/api/projects` and `app/api/projects/[projectId]`.
+- Enforced authenticated ownership checks so unauthenticated requests return `401` and non-owner rename/delete attempts return `403`.
+- Defaulted missing project names to `Untitled Project` when creating or renaming.
+- Verified the app builds successfully with `npm run build` after implementing the route handlers.
 
 ## In Progress
 
@@ -50,7 +54,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Add authenticated project persistence and API routes.
+- None; the project API backend requirement is complete.
 
 ## Open Questions
 
@@ -60,6 +64,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 - Use shadcn/ui generated primitives in `components/ui/` as protected foundation components.
 - Keep editor chrome as app-level compositions in `components/editor/`.
+- Keep backend-only project mutation logic in `app/api` and avoid UI wiring until the API layer is verified.
 
 ## Session Notes
 
@@ -71,3 +76,4 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented `context/feature-specs/03-auth.md`; lint and production build verification passed after refreshing stale `.next` output.
 - Implemented `context/feature-specs/04-project-dialogs.md`; lint and production build verification passed.
 - Implemented `context/feature-specs/05-prisma.md`; schema validation, migration status, lint, and production build verification passed.
+- Implemented `context/feature-specs/06-project-apis.md`; production build verification passed after route creation and ownership enforcement.
