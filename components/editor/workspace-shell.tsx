@@ -3,11 +3,15 @@
 import { useState } from "react"
 import { Share2 } from "lucide-react"
 
+import { CanvasEditor } from "@/components/editor/canvas-editor"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
+import { ProjectDialogs } from "@/components/editor/project-dialogs"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
 import { ShareDialog } from "@/components/editor/share-dialog"
-import { CanvasEditor } from "@/components/editor/canvas-editor"
+import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal"
+import type { CanvasTemplate } from "@/components/editor/starter-templates"
 import type { Project } from "@/components/editor/project-types"
+import { useProjectDialogs } from "@/components/editor/use-project-dialogs"
 import { Button } from "@/components/ui/button"
 
 interface WorkspaceShellProps {
@@ -24,6 +28,9 @@ export function WorkspaceShell({ project, projects, isOwner = false }: Workspace
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(true)
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
+  const [pendingTemplate, setPendingTemplate] = useState<CanvasTemplate | null>(null)
+  const projectDialogs = useProjectDialogs(projects)
 
   return (
     <main className="min-h-screen bg-base text-copy-primary">
@@ -33,14 +40,28 @@ export function WorkspaceShell({ project, projects, isOwner = false }: Workspace
         onAiSidebarToggle={() => setIsAiSidebarOpen((open) => !open)}
         onSidebarToggle={() => setIsSidebarOpen((open) => !open)}
         rightActions={
-          <Button onClick={() => setIsShareDialogOpen(true)} size="sm" variant="outline">
-            <Share2 className="h-4 w-4" />
-            Share
-          </Button>
+          <>
+            <Button onClick={() => setIsTemplateDialogOpen(true)} size="sm" variant="outline">
+              Templates
+            </Button>
+            <Button onClick={() => setIsShareDialogOpen(true)} size="sm" variant="outline">
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
+          </>
         }
       >
         <span className="truncate text-sm font-medium text-copy-primary">{project.name}</span>
       </EditorNavbar>
+
+      <StarterTemplatesModal
+        isOpen={isTemplateDialogOpen}
+        onClose={() => setIsTemplateDialogOpen(false)}
+        onImport={(template) => {
+          setPendingTemplate(template)
+          setIsTemplateDialogOpen(false)
+        }}
+      />
 
       <ShareDialog
         isOpen={isShareDialogOpen}
@@ -50,18 +71,26 @@ export function WorkspaceShell({ project, projects, isOwner = false }: Workspace
         isOwner={isOwner}
       />
 
-      <ProjectSidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        onDeleteProject={() => undefined}
-        onNewProject={() => undefined}
-        onRenameProject={() => undefined}
-        projects={projects}
-        selectedProjectId={project.id}
-      />
+      <ProjectDialogs {...projectDialogs} />
 
       <section className="flex h-[calc(100vh-3.5rem)] pt-14">
-        <CanvasEditor roomId={project.id} />
+        <ProjectSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          onDeleteProject={projectDialogs.openDeleteDialog}
+          onNewProject={projectDialogs.openCreateDialog}
+          onRenameProject={projectDialogs.openRenameDialog}
+          projects={projectDialogs.projects}
+          selectedProjectId={project.id}
+        />
+
+        <div className="relative min-w-0 flex-1">
+          <CanvasEditor
+            roomId={project.id}
+            pendingTemplate={pendingTemplate}
+            onTemplateHandled={() => setPendingTemplate(null)}
+          />
+        </div>
 
         <aside
           className={`overflow-hidden border-l border-surface-border bg-surface/80 transition-all duration-200 ${

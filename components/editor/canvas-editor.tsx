@@ -4,12 +4,15 @@ import { LiveMap, LiveObject } from "@liveblocks/core"
 import { LiveblocksProvider, RoomProvider, ClientSideSuspense } from "@liveblocks/react"
 
 import { Canvas } from "@/components/editor/canvas"
+import type { CanvasTemplate } from "@/components/editor/starter-templates"
 
 interface CanvasEditorProps {
   roomId: string
+  pendingTemplate?: CanvasTemplate | null
+  onTemplateHandled?: () => void
 }
 
-export function CanvasEditor({ roomId }: CanvasEditorProps) {
+export function CanvasEditor({ roomId, pendingTemplate, onTemplateHandled }: CanvasEditorProps) {
   return (
     <LiveblocksProvider
       authEndpoint={async () => {
@@ -40,7 +43,7 @@ export function CanvasEditor({ roomId }: CanvasEditorProps) {
         } as unknown as Liveblocks["Storage"]}
       >
         <ClientSideSuspense fallback={<LoadingCanvas />}>
-          <Canvas />
+          <Canvas pendingTemplate={pendingTemplate} onTemplateHandled={onTemplateHandled} />
         </ClientSideSuspense>
       </RoomProvider>
     </LiveblocksProvider>

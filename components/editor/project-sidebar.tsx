@@ -97,9 +97,9 @@ export function ProjectSidebar({
       <aside
         aria-label="Projects"
         aria-hidden={!isOpen}
-        className={`fixed inset-y-14 left-0 z-20 flex w-80 flex-col border-r border-surface-border bg-surface shadow-2xl transition-transform duration-200 ease-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`relative z-20 flex h-full shrink-0 flex-col overflow-hidden border-r border-surface-border bg-surface shadow-2xl transition-all duration-200 ease-out ${
+          isOpen ? "w-80 opacity-100" : "w-0 border-r-0 opacity-0"
+        } ${isOpen ? "lg:shadow-none" : "lg:shadow-none"}`}
       >
         <div className="flex h-14 items-center justify-between border-b border-surface-border px-4">
           <h2 className="text-sm font-medium text-copy-primary">Projects</h2>
