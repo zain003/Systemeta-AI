@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Share2 } from "lucide-react"
+import { Save, Share2 } from "lucide-react"
 
+import { AISidebar } from "@/components/editor/ai-sidebar"
 import { CanvasEditor } from "@/components/editor/canvas-editor"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
 import { ProjectDialogs } from "@/components/editor/project-dialogs"
@@ -30,6 +31,11 @@ export function WorkspaceShell({ project, projects, isOwner = false }: Workspace
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
   const [pendingTemplate, setPendingTemplate] = useState<CanvasTemplate | null>(null)
+  const [manualSaveSignal, setManualSaveSignal] = useState(0)
+  const [saveState, setSaveState] = useState<{ status: "idle" | "saving" | "saved" | "error"; error: string | null }>({
+    status: "idle",
+    error: null,
+  })
   const projectDialogs = useProjectDialogs(projects)
 
   return (
@@ -41,6 +47,15 @@ export function WorkspaceShell({ project, projects, isOwner = false }: Workspace
         onSidebarToggle={() => setIsSidebarOpen((open) => !open)}
         rightActions={
           <>
+            <Button
+              onClick={() => setManualSaveSignal((value) => value + 1)}
+              size="sm"
+              variant={saveState.status === "error" ? "destructive" : "outline"}
+              className="gap-2"
+            >
+              <Save className="h-4 w-4" />
+              <span>{saveState.status === "saving" ? "Saving..." : saveState.status === "saved" ? "Saved" : saveState.status === "error" ? "Retry save" : "Save"}</span>
+            </Button>
             <Button onClick={() => setIsTemplateDialogOpen(true)} size="sm" variant="outline">
               Templates
             </Button>
@@ -87,24 +102,16 @@ export function WorkspaceShell({ project, projects, isOwner = false }: Workspace
         <div className="relative min-w-0 flex-1">
           <CanvasEditor
             roomId={project.id}
+            projectId={project.id}
             pendingTemplate={pendingTemplate}
             onTemplateHandled={() => setPendingTemplate(null)}
+            isTemplateDialogOpen={isTemplateDialogOpen}
+            manualSaveSignal={manualSaveSignal}
+            onSaveStateChange={setSaveState}
           />
         </div>
 
-        <aside
-          className={`overflow-hidden border-l border-surface-border bg-surface/80 transition-all duration-200 ${
-            isAiSidebarOpen ? "w-80 opacity-100" : "w-0 border-l-0 opacity-0"
-          }`}
-        >
-          <div
-            className={`flex h-full w-80 items-center justify-center px-4 text-center text-sm text-copy-secondary transition-opacity duration-200 ${
-              isAiSidebarOpen ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            AI chat placeholder
-          </div>
-        </aside>
+        <AISidebar isOpen={isAiSidebarOpen} onClose={() => setIsAiSidebarOpen(false)} />
       </section>
     </main>
   )

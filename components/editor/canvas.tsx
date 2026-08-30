@@ -5,6 +5,7 @@ import {
   Handle,
   MiniMap,
   NodeResizeControl,
+  ConnectionLineType,
   ConnectionMode,
   Position,
   ReactFlow,
@@ -12,13 +13,15 @@ import {
   useReactFlow,
   type NodeProps,
 } from "@xyflow/react"
+import { UserButton, useUser } from "@clerk/nextjs"
 import { LiveList, LiveMap, LiveObject, type LsonObject } from "@liveblocks/core"
-import { useCanRedo, useCanUndo, useMutation, useRedo, useUndo } from "@liveblocks/react"
+import { useCanRedo, useCanUndo, useMutation, useRedo, useUndo, useOthers, useSelf, useUpdateMyPresence } from "@liveblocks/react"
 import { useLiveblocksFlow } from "@liveblocks/react-flow"
 import { Minus, Plus, Redo2, ScanSearch, Undo2 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent as ReactDragEvent, type KeyboardEvent, type MouseEvent } from "react"
 import { createPortal } from "react-dom"
 
+import { useCanvasAutosave } from "@/hooks/useCanvasAutosave"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 
 import {
@@ -50,6 +53,26 @@ interface ShapeDragPayload {
   }
 }
 
+function isCanvasNodeCandidate(value: unknown): value is CanvasNode {
+  if (!value || typeof value !== "object") {
+    return false
+  }
+
+  const candidate = value as Partial<CanvasNode>
+
+  return typeof candidate.id === "string" && typeof candidate.position?.x === "number" && typeof candidate.position?.y === "number" && !!candidate.data && typeof candidate.data === "object"
+}
+
+function isCanvasEdgeCandidate(value: unknown): value is CanvasEdge {
+  if (!value || typeof value !== "object") {
+    return false
+  }
+
+  const candidate = value as Partial<CanvasEdge>
+
+  return typeof candidate.id === "string" && typeof candidate.source === "string" && typeof candidate.target === "string"
+}
+
 interface ShapeVisualProps {
   shape: CanvasNodeShape
   width: number
@@ -60,6 +83,20 @@ interface ShapeVisualProps {
   selected?: boolean
   preview?: boolean
   onDoubleClick?: (event: MouseEvent<HTMLDivElement>) => void
+}
+
+interface PresenceUser {
+  id?: string
+  connectionId: number
+  info?: {
+    name?: string
+    avatar?: string
+    color?: string
+  }
+  presence?: {
+    cursor?: { x: number; y: number } | null
+    thinking?: boolean
+  }
 }
 
 function ShapeVisual({ shape, width, height, fill, textColor, label, selected = false, preview = false, onDoubleClick }: ShapeVisualProps) {
@@ -120,6 +157,103 @@ function ShapeLabel({ label, textColor }: { label: string; textColor?: string })
   )
 }
 
+function CollaboratorAvatarStack({ currentUserId, others }: { currentUserId: string | null | undefined; others: readonly PresenceUser[] }) {
+  const collaboratorUsers = useMemo(
+    () => others.filter((other) => other.id !== currentUserId).slice(0, 5),
+    [currentUserId, others],
+  )
+  const overflowCount = Math.max(others.filter((other) => other.id !== currentUserId).length - 5, 0)
+
+  return (
+    <div className="pointer-events-none absolute right-4 top-4 z-20 flex items-center gap-3">
+      {collaboratorUsers.length > 0 && (
+        <div className="flex items-center">
+          {collaboratorUsers.map((user, index) => {
+            const displayName = user.info?.name || "Collaborator"
+            const initials = displayName
+              .split(" ")
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((part) => part[0]?.toUpperCase() ?? "")
+              .join("") || "C"
+
+            return (
+              <div key={user.connectionId} className="relative" style={{ marginLeft: index === 0 ? 0 : -10 }}>
+                {user.info?.avatar ? (
+                  <img
+                    src={user.info.avatar}
+                    alt={displayName}
+                    className="h-8 w-8 rounded-full border border-white/15 bg-surface object-cover shadow-sm ring-2 ring-slate-950/70"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-surface-elevated text-[10px] font-semibold text-copy-primary shadow-sm ring-2 ring-slate-950/70">
+                    {initials}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {overflowCount > 0 && (
+            <div className="relative z-10 ml-[-10px] flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-surface-elevated text-[10px] font-semibold text-copy-primary shadow-sm ring-2 ring-slate-950/70">
+              +{overflowCount}
+            </div>
+          )}
+        </div>
+      )}
+
+      {collaboratorUsers.length > 0 && <div className="h-8 w-px bg-surface-border/80" />}
+
+      <div className="pointer-events-auto flex h-8 w-8 items-center justify-center overflow-hidden rounded-full">
+        <UserButton />
+      </div>
+    </div>
+  )
+}
+
+function LiveCursorLayer({ currentUserId, others }: { currentUserId: string | null | undefined; others: readonly PresenceUser[] }) {
+  const liveCursors = useMemo(
+    () => others.filter((other) => other.id !== currentUserId && !!other.presence?.cursor),
+    [currentUserId, others],
+  )
+
+  if (liveCursors.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20">
+      {liveCursors.map((user) => {
+        const cursor = user.presence?.cursor
+        const displayName = user.info?.name || "Collaborator"
+        const color = user.info?.color || "#00c8d4"
+
+        if (!cursor) {
+          return null
+        }
+
+        return (
+          <div
+            key={user.connectionId}
+            className="absolute"
+            style={{ left: cursor.x, top: cursor.y, transform: "translate(-6px, -6px)" }}
+          >
+            <svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true">
+              <path d="M1 1L13 8L8 9L9.5 15L6.5 13.5L4.5 15.5L1 1Z" fill={color} />
+            </svg>
+            <div
+              className="mt-1 inline-flex items-center rounded-full border border-white/10 px-2 py-1 text-[10px] font-medium text-slate-950 shadow-sm"
+              style={{ backgroundColor: color }}
+            >
+              {displayName}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function CanvasNodeRenderer({
   id,
   data,
@@ -127,7 +261,8 @@ function CanvasNodeRenderer({
   width: measuredWidth,
   height: measuredHeight,
   connectionState,
-}: NodeProps<CanvasNode> & { connectionState?: ConnectionState }) {
+  isTemplateDialogOpen = false,
+}: NodeProps<CanvasNode> & { connectionState?: ConnectionState; isTemplateDialogOpen?: boolean }) {
   const option = NODE_SHAPES.find((item) => item.name === data.shape) ?? NODE_SHAPES[0]
   const [isEditing, setIsEditing] = useState(false)
   const [draftLabel, setDraftLabel] = useState(data.label ?? "")
@@ -399,13 +534,14 @@ function CanvasNodeRenderer({
           style={{ inset: 6 }}
         />
       )}
-      {selected && toolbarPos &&
+      {selected && toolbarPos && !isTemplateDialogOpen &&
         createPortal(
           <ColorToolbar
             x={toolbarPos.x}
             y={toolbarPos.y}
             currentBackgroundColor={data.backgroundColor}
             onColorSelect={handleColorChange}
+            isVisible
           />,
           document.body,
         )}
@@ -414,8 +550,12 @@ function CanvasNodeRenderer({
 }
 
 interface CanvasProps {
+  projectId?: string
   pendingTemplate?: CanvasTemplate | null
   onTemplateHandled?: () => void
+  isTemplateDialogOpen?: boolean
+  manualSaveSignal?: number
+  onSaveStateChange?: (nextState: { status: "idle" | "saving" | "saved" | "error"; error: string | null }) => void
 }
 
 function NextLogoMark() {
@@ -426,7 +566,7 @@ function NextLogoMark() {
   )
 }
 
-function CanvasInner({ pendingTemplate, onTemplateHandled }: CanvasProps) {
+function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplateDialogOpen = false, manualSaveSignal, onSaveStateChange }: CanvasProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useLiveblocksFlow<CanvasNode, CanvasEdge>({
     suspense: true,
   })
@@ -436,6 +576,11 @@ function CanvasInner({ pendingTemplate, onTemplateHandled }: CanvasProps) {
   const canRedo = useCanRedo()
   const undo = useUndo()
   const redo = useRedo()
+  const others = useOthers((users) => users as readonly PresenceUser[])
+  const self = useSelf((me) => (me ? (me as PresenceUser) : null))
+  const updateMyPresence = useUpdateMyPresence()
+  const { user } = useUser()
+  const currentUserId = user?.id ?? self?.id ?? null
   const nodeCounter = useRef(0)
   const [draggingShape, setDraggingShape] = useState<ShapeDragPayload | null>(null)
   const [dragPreview, setDragPreview] = useState<{ x: number; y: number } | null>(null)
@@ -446,10 +591,33 @@ function CanvasInner({ pendingTemplate, onTemplateHandled }: CanvasProps) {
   })
   const canvasNodeTypes = useMemo(
     () => ({
-      canvasNode: (props: NodeProps<CanvasNode>) => <CanvasNodeRenderer {...props} connectionState={connectionState} />,
+      canvasNode: (props: NodeProps<CanvasNode>) => <CanvasNodeRenderer {...props} connectionState={connectionState} isTemplateDialogOpen={isTemplateDialogOpen} />,
     }),
-    [connectionState],
+    [connectionState, isTemplateDialogOpen],
   )
+  const { status: saveStatus, error: saveError, saveNow } = useCanvasAutosave({
+    projectId,
+    nodes: nodes ?? [],
+    edges: edges ?? [],
+    enabled: !!projectId,
+    debounceMs: 700,
+  })
+  const hasHydratedSavedState = useRef(false)
+
+  useEffect(() => {
+    onSaveStateChange?.({
+      status: saveStatus,
+      error: saveError ?? null,
+    })
+  }, [onSaveStateChange, saveError, saveStatus])
+
+  useEffect(() => {
+    if (manualSaveSignal === undefined) {
+      return
+    }
+
+    void saveNow()
+  }, [manualSaveSignal, saveNow])
 
   const canvasEdgeTypes = useMemo(
     () => ({
@@ -661,6 +829,23 @@ function CanvasInner({ pendingTemplate, onTemplateHandled }: CanvasProps) {
     })
   }, [])
 
+  const handleCanvasMouseMove = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      updateMyPresence({
+        cursor: { x: event.clientX, y: event.clientY },
+        thinking: false,
+      })
+    },
+    [updateMyPresence],
+  )
+
+  const handleCanvasMouseLeave = useCallback(() => {
+    updateMyPresence({
+      cursor: null,
+      thinking: false,
+    })
+  }, [updateMyPresence])
+
   const isValidConnection = useCallback((connection: { source: string; target: string; sourceHandleId?: string | null; targetHandleId?: string | null }) => {
     if (!connection.source || !connection.target) {
       return false
@@ -751,6 +936,68 @@ function CanvasInner({ pendingTemplate, onTemplateHandled }: CanvasProps) {
     onTemplateHandled?.()
   }, [importTemplate, onTemplateHandled, pendingTemplate])
 
+  useEffect(() => {
+    if (!projectId || hasHydratedSavedState.current) {
+      return
+    }
+
+    const hasRoomState = (nodes?.length ?? 0) > 0 || (edges?.length ?? 0) > 0
+
+    if (hasRoomState) {
+      hasHydratedSavedState.current = true
+      return
+    }
+
+    hasHydratedSavedState.current = true
+
+    const controller = new AbortController()
+
+    void fetch(`/api/projects/${projectId}/canvas`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          return
+        }
+
+        const payload = (await response.json()) as { nodes?: unknown[]; edges?: unknown[] }
+        const savedNodes = Array.isArray(payload.nodes) ? payload.nodes : []
+        const savedEdges = Array.isArray(payload.edges) ? payload.edges : []
+
+        if (savedNodes.length === 0 && savedEdges.length === 0) {
+          return
+        }
+
+        const nextNodes = savedNodes.filter(isCanvasNodeCandidate).map((node) => ({
+          ...node,
+          type: "canvasNode" as const,
+        }))
+
+        const nextEdges = savedEdges.filter(isCanvasEdgeCandidate).map((edge) => ({
+          ...edge,
+          type: "canvasEdge" as const,
+        }))
+
+        onNodesChange(
+          nextNodes.map((node) => ({
+            type: "add",
+            item: node,
+          })),
+        )
+        onEdgesChange(
+          nextEdges.map((edge) => ({
+            type: "add",
+            item: edge,
+          })),
+        )
+      })
+      .catch(() => {
+        // Ignore fetch cancellation or load failure; room state remains empty.
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [edges, nodes, onEdgesChange, onNodesChange, projectId])
+
   useKeyboardShortcuts({
     reactFlow,
     handleUndo,
@@ -798,9 +1045,13 @@ function CanvasInner({ pendingTemplate, onTemplateHandled }: CanvasProps) {
         onConnect={handleConnect}
         onConnectStart={handleConnectStart}
         onConnectEnd={handleConnectEnd}
+        onMouseMove={handleCanvasMouseMove}
+        onMouseLeave={handleCanvasMouseLeave}
         isValidConnection={isValidConnection}
         nodeTypes={canvasNodeTypes}
         edgeTypes={canvasEdgeTypes}
+        defaultEdgeOptions={{ type: "canvasEdge" }}
+        connectionLineType={ConnectionLineType.Step}
         nodesConnectable
         connectionMode={ConnectionMode.Loose}
         fitView
@@ -808,6 +1059,9 @@ function CanvasInner({ pendingTemplate, onTemplateHandled }: CanvasProps) {
         <Background color="#333" gap={16} size={1} />
         <MiniMap position="bottom-right" className="canvas-minimap" />
       </ReactFlow>
+
+      <CollaboratorAvatarStack currentUserId={currentUserId} others={others} />
+      <LiveCursorLayer currentUserId={currentUserId} others={others} />
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-24">
         <div className="relative h-full w-full">
@@ -912,10 +1166,16 @@ function CanvasInner({ pendingTemplate, onTemplateHandled }: CanvasProps) {
   )
 }
 
-export function Canvas({ pendingTemplate, onTemplateHandled }: CanvasProps) {
+export function Canvas({ projectId, pendingTemplate, onTemplateHandled, manualSaveSignal, onSaveStateChange }: CanvasProps) {
   return (
     <ReactFlowProvider>
-      <CanvasInner pendingTemplate={pendingTemplate} onTemplateHandled={onTemplateHandled} />
+      <CanvasInner
+        projectId={projectId}
+        pendingTemplate={pendingTemplate}
+        onTemplateHandled={onTemplateHandled}
+        manualSaveSignal={manualSaveSignal}
+        onSaveStateChange={onSaveStateChange}
+      />
     </ReactFlowProvider>
   )
 }

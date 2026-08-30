@@ -8,11 +8,23 @@ import type { CanvasTemplate } from "@/components/editor/starter-templates"
 
 interface CanvasEditorProps {
   roomId: string
+  projectId: string
   pendingTemplate?: CanvasTemplate | null
   onTemplateHandled?: () => void
+  isTemplateDialogOpen?: boolean
+  manualSaveSignal?: number
+  onSaveStateChange?: (nextState: { status: "idle" | "saving" | "saved" | "error"; error: string | null }) => void
 }
 
-export function CanvasEditor({ roomId, pendingTemplate, onTemplateHandled }: CanvasEditorProps) {
+export function CanvasEditor({
+  roomId,
+  projectId,
+  pendingTemplate,
+  onTemplateHandled,
+  isTemplateDialogOpen = false,
+  manualSaveSignal,
+  onSaveStateChange,
+}: CanvasEditorProps) {
   return (
     <LiveblocksProvider
       authEndpoint={async () => {
@@ -34,6 +46,7 @@ export function CanvasEditor({ roomId, pendingTemplate, onTemplateHandled }: Can
         id={roomId}
         initialPresence={{
           cursor: null,
+          thinking: false,
         }}
         initialStorage={{
           flow: new LiveObject({
@@ -43,7 +56,14 @@ export function CanvasEditor({ roomId, pendingTemplate, onTemplateHandled }: Can
         } as unknown as Liveblocks["Storage"]}
       >
         <ClientSideSuspense fallback={<LoadingCanvas />}>
-          <Canvas pendingTemplate={pendingTemplate} onTemplateHandled={onTemplateHandled} />
+          <Canvas
+            projectId={projectId}
+            pendingTemplate={pendingTemplate}
+            onTemplateHandled={onTemplateHandled}
+            isTemplateDialogOpen={isTemplateDialogOpen}
+            manualSaveSignal={manualSaveSignal}
+            onSaveStateChange={onSaveStateChange}
+          />
         </ClientSideSuspense>
       </RoomProvider>
     </LiveblocksProvider>

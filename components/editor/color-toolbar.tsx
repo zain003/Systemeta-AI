@@ -8,9 +8,14 @@ interface ColorToolbarProps {
   y: number
   currentBackgroundColor?: string
   onColorSelect: (backgroundColor: string, textColor: string) => void
+  isVisible?: boolean
 }
 
-export function ColorToolbar({ x, y, currentBackgroundColor, onColorSelect }: ColorToolbarProps) {
+export function ColorToolbar({ x, y, currentBackgroundColor, onColorSelect, isVisible = true }: ColorToolbarProps) {
+  if (!isVisible) {
+    return null
+  }
+
   const handleSwatchClick = (event: MouseEvent<HTMLButtonElement>, backgroundColor: string, textColor: string) => {
     event.preventDefault()
     event.stopPropagation()
@@ -28,8 +33,9 @@ export function ColorToolbar({ x, y, currentBackgroundColor, onColorSelect }: Co
         left: `${safeX}px`,
         top: `${y}px`,
         transform: "translateX(-50%) translateY(-100%) translateY(-20px)",
-        zIndex: 999,
-        visibility: "visible",
+        zIndex: 30,
+        visibility: isVisible ? "visible" : "hidden",
+        pointerEvents: isVisible ? "auto" : "none",
         willChange: "transform",
         maxWidth: `${toolbarWidth}px`,
       }}

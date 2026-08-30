@@ -4,16 +4,24 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Starter template import is complete and verified: users can open the template library, preview each predefined diagram, and replace the existing canvas with a selected template inside the collaborative Liveblocks flow.
+- Presence avatars and live cursors are complete and verified in the editor room view: collaborator stacks remain in the canvas top-right only, the current Clerk user is excluded, and live cursor movement is broadcast from the React Flow mouse events without altering the shared editor navbar.
+- Starter template import remains verified and stable: users can open the template library, preview each predefined diagram, and replace the existing canvas with a selected template inside the collaborative Liveblocks flow.
 
 ## Current Goal
 
 - Maintain the verified collaborative editor foundation with complete node, edge, canvas-control, and starter-template interaction, keeping the model aligned with the feature specs, React Flow runtime, and production build checks.
 - Resolve the editor control overlap by making the sidebar a real layout region and anchoring the floating bottom controls to the canvas/editor area rather than the viewport.
 - Keep the starter template chooser visually compact and desktop-appropriate by widening the modal and balancing card sizing without increasing modal height.
+- Add the explicit canvas save action to the editor navbar so users can trigger an immediate save from the top action bar, while keeping the debounced autosave in place for background persistence.
+- Ensure repeated canvas writes correctly overwrite prior Vercel Blob snapshots instead of failing with an already-existing-path error.
 
 ## Completed
 
+- Implemented the canvas autosave and snapshot load flow for collaborative editor state: the room state is saved into a project-scoped blob at `/api/projects/[projectId]/canvas`, the returned Vercel Blob URL is stored on the Prisma project record, and the editor loads the saved snapshot only when the room is empty so active collaboration is never overwritten.
+- Added a dedicated top-right canvas Save action in the editor navbar that triggers the same save path used by autosave; the save state is surfaced in the action label so users can see when a save is in progress, succeeded, or failed.
+- Fixed Vercel Blob overwrite behavior by passing `allowOverwrite: true` and the configured `BLOB_READ_WRITE_TOKEN` when uploading the project canvas JSON, so repeated saves no longer fail when the blob pathname already exists.
+- Hardened the node-color palette so it is not rendered while the starter-template modal is open, keeping the modal in the topmost layering position and preserving the editor-only palette behavior when the modal closes.
+- Implemented the AI sidebar shell per the workspace spec: a dedicated right-side floating panel with preserved slide-in behavior, header, tabs, chat composer, and static Specs tab UI using the existing dark token system and shadcn primitives.
 - Initialized shadcn/ui for the Next.js app.
 - Created initial shadcn configuration and generated `components/ui/button.tsx`.
 - Created `lib/utils.ts` with the shared `cn()` helper.
@@ -37,6 +45,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Added the authenticated `/editor` route and root auth-based redirect.
 - Added Clerk's built-in `UserButton` to the editor navbar.
 - Added the editor home empty state with create-project action.
+- Implemented the 23-ai-sidebar-shell UI with an AI Workspace header, AI Architect and Specs tabs, starter prompt chips, chat message styling, textarea input, and the static spec card while keeping the existing right-side slide-over behavior intact.
 - Added mock owned and shared project data with ownership-aware sidebar actions.
 - Added the dedicated project dialog hook for dialog, form, and loading state.
 - Added create, rename, and delete project dialogs with slug preview and keyboard submission.
@@ -105,6 +114,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Fixed false access denial by wiring the project dialogs to the real API-backed project list and creation flow, and verified the production build still passes.
 - Re-validated the current room shell after aligning the AI sidebar toggle behavior and the layout to the room-shell spec; the production build remains successful.
 - Implemented `context/feature-specs/07-wire-editor-home.md`; converted editor page to server component with server-side project fetching, added create/delete navigation via useRouter, separated client and server components, and verified production build passes with `npm run build`.
+- Implemented `context/feature-specs/22-presence-avatars-cursors.md` and verified the room-only presence UI with `npm run build` and `npm run lint` (0 errors; warnings are the pre-existing external-image and unused-import warnings seen elsewhere in the repo).
 - Implemented `context/feature-specs/09-share-dialog.md`; created share dialog component with owner/collaborator role separation, added three API routes for collaborator management (list/invite/remove), integrated Clerk Backend API for user enrichment, and verified production build passes with `npm run build`.
 - Implemented `context/feature-specs/10-liveblocks-setup.md` and `context/feature-specs/11-base-canvas.md`; fixed the Liveblocks auth response parsing, added the required room storage seed, aligned the shared canvas types with the installed React Flow package, and verified the production build remains passing with `npm run build`.
 - Implemented `context/feature-specs/12-shape-panel.md`; added the floating shape toolbar, draggable shape payloads with default sizing, react-flow drag/drop node creation, and the custom canvas node renderer. Verified the production build still passes with `npm run build`.
@@ -124,6 +134,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Confirmed the collaborative node interaction layer matches the node-shape and node-editing specs: selected nodes expose resize handles, min-size constraints are enforced, labels can be edited inline, editing closes on blur/Escape, and React Flow connection handles remain available for node linking.
 - Re-ran the build verification after the final canvas repair and confirmed production compilation remains successful.
 - Implemented the follow-up resize and connector fixes in `context/feature-specs/15-node-issues`: resizing no longer keeps a locked aspect ratio, handles are visible by default with low opacity and full-white highlights on selection/hover, and valid source-to-target node connections are handled through React Flow’s actual connection lifecycle.
+- Verified the presence feature end to end with `npm run build` and `npm run lint`: the app builds successfully, and lint returns 0 errors with only the existing project warnings about external avatar images and a couple of unused values outside the new presence flow.
 - Verified the node interaction stack with `npm run lint` and `npm run build`; lint reports only the existing external-avatar `<img>` warning in the share dialog, while the app builds successfully without type errors.
 - Implemented `context/feature-specs/16-node-resizing-behaviour.md`; corner handles now preserve aspect ratio while side handles resize one axis only, with direction-appropriate cursor semantics, minimum-size guardrails, and preserved connection behavior.
 - Revalidated the final canvas state with `npm run lint` and `npm run build`; the project compiles successfully and the remaining lint result is a pre-existing warning in the shared avatar image component, not a canvas error.
@@ -137,6 +148,8 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented `context/feature-specs/20-canvas-ergonomics.md`; added the floating bottom-left canvas control bar with separated zoom and history groups, connected the controls to the React Flow instance and Liveblocks undo/redo hooks, and created the `hooks/useKeyboardShortcuts` keyboard shortcut handler with editable-field guards for `+`, `=`, `-`, `Cmd/Ctrl + Z`, `Cmd/Ctrl + Shift + Z`, and `Cmd/Ctrl + Y`. Verified with `npm run build` passing successfully.
 - Implemented `context/feature-specs/21-starter-templates.md`; created a starter template library with a typed `CanvasTemplate` definition and three predefined diagrams (microservices, CI/CD pipeline, event-driven system), added the import dialog with lightweight SVG previews, and wired the template action into the collaborative canvas so it replaces the current node/edge state before fitting the new view. Verified with `npm run build` passing successfully.
 - Adjusted the starter template modal to a wider desktop layout by increasing the dialog width to a 900–1100px desktop range, reducing preview height to keep the content compact, and using a responsive card grid with a minimum width so titles and descriptions remain readable without tall narrow cards.
+- Implemented `context/feature-specs/22-presence-avatars-cursors.md`; added a room-scoped collaborator avatar stack anchored to the canvas top-right, excluded the active Clerk user from the stack, kept the editor navbar unchanged, and rendered live cursors for other participants from Liveblocks presence using `onMouseMove` and `onMouseLeave` events. Updated `liveblocks.config.ts` to define the shared presence contract with `cursor` and `thinking` fields.
+- Implemented `context/feature-specs/22-presence-avatars-cursors.md`; added a toolbar-free collaborator avatar stack in the canvas top-right, excluded the current Clerk user from the list, kept the shared navbar unchanged, and rendered other participants as Liveblocks presence cursors using the canvas `onMouseMove` and `onMouseLeave` events. Updated the shared presence contract in `liveblocks.config.ts` to include `cursor` and `thinking` and verified the room view compiles successfully.
 - Implemented `context/feature-specs/12-shape-panel.md`; added a floating bottom-center shape panel with six draggable node templates, correct drag payload sizing, React Flow canvas `dragover`/`drop` handling, timestamp-plus-counter node IDs, and a custom `canvasNode` renderer for newly created nodes with default fill/label state. Verified with `npm run build` passing successfully.
 - Fixed the editor control overlap by making the project sidebar participate in the editor layout and anchoring the bottom-left zoom group and center shape panel to the editor bounds instead of the viewport. Verified with the production build.
 - Restored the real project create, rename, and delete actions in the workspace editor shell by wiring the sidebar back to the project dialog API flow.
