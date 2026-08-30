@@ -3,9 +3,11 @@
 import {
   Background,
   Controls,
+  Handle,
   MiniMap,
-  NodeResizer,
+  NodeResizeControl,
   ConnectionMode,
+  Position,
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
@@ -14,7 +16,7 @@ import {
 import { LiveList, LiveMap, LiveObject, type LsonObject } from "@liveblocks/core"
 import { useMutation } from "@liveblocks/react"
 import { useLiveblocksFlow } from "@liveblocks/react-flow"
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent as ReactDragEvent, type KeyboardEvent, type MouseEvent } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent as ReactDragEvent, type KeyboardEvent, type MouseEvent } from "react"
 
 import {
   NODE_COLORS,
@@ -25,9 +27,13 @@ import {
   type CanvasNodeShape,
 } from "@/types/canvas"
 
-const canvasNodeTypes = { canvasNode: CanvasNodeRenderer }
-
 import "@xyflow/react/dist/style.css"
+
+interface ConnectionState {
+  active: boolean
+  sourceNodeId: string | null
+  sourceHandleId: string | null
+}
 
 interface ShapeDragPayload {
   type: "shape"
@@ -66,7 +72,6 @@ function ShapeVisual({ shape, width, height, fill, label, selected = false, prev
         className={`relative ${preview ? "opacity-65" : ""}`}
         style={{ width, height, display: "flex", alignItems: "center", justifyContent: "center" }}
         onDoubleClick={onDoubleClick}
-        onMouseDown={(event) => event.stopPropagation()}
       >
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {shape === "cylinder" && <ellipse cx="50" cy="16" rx="45" ry="8" fill={fill} stroke={stroke} strokeWidth={selected ? 2 : 1.5} />}
@@ -90,7 +95,6 @@ function ShapeVisual({ shape, width, height, fill, label, selected = false, prev
         borderRadius: shape === "circle" || shape === "pill" ? "9999px" : "16px",
       }}
       onDoubleClick={onDoubleClick}
-      onMouseDown={(event) => event.stopPropagation()}
     >
       {label && <ShapeLabel label={label} />}
     </div>
@@ -101,10 +105,19 @@ function ShapeLabel({ label }: { label: string }) {
   return <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-3 text-center text-sm leading-tight tracking-wide text-white">{label}</div>
 }
 
-function CanvasNodeRenderer({ id, data, selected, width: measuredWidth, height: measuredHeight }: NodeProps<CanvasNode>) {
+function CanvasNodeRenderer({
+  id,
+  data,
+  selected,
+  width: measuredWidth,
+  height: measuredHeight,
+  connectionState,
+}: NodeProps<CanvasNode> & { connectionState?: ConnectionState }) {
   const option = NODE_SHAPES.find((item) => item.name === data.shape) ?? NODE_SHAPES[0]
   const [isEditing, setIsEditing] = useState(false)
-  const [draftLabel, setDraftLabel] = useState(data.label)
+  const [draftLabel, setDraftLabel] = useState(data.label ?? "")
+  const [hoveredTargetHandle, setHoveredTargetHandle] = useState<string | null>(null)
+
   const updateNodeData = useMutation(({ storage }, update: { id: string; data: CanvasNodeData }) => {
     const flow = storage.get("flow") as unknown
 
@@ -121,7 +134,7 @@ function CanvasNodeRenderer({ id, data, selected, width: measuredWidth, height: 
 
   const finishEditing = () => {
     setIsEditing(false)
-    if (draftLabel !== data.label) {
+    if (draftLabel !== (data.label ?? "")) {
       updateNodeData({ id, data: { ...data, label: draftLabel } })
     }
   }
@@ -136,37 +149,158 @@ function CanvasNodeRenderer({ id, data, selected, width: measuredWidth, height: 
     if (event.key === "Escape") {
       event.preventDefault()
       event.stopPropagation()
-      setDraftLabel(data.label)
+      setDraftLabel(data.label ?? "")
       setIsEditing(false)
     }
   }
 
   const handleResize = useCallback(
     (_event: unknown, params: { width: number; height: number }) => {
-      updateNodeData({ id, data: { ...data, size: { width: params.width, height: params.height } } })
+      const nextSize = {
+        width: Math.max(80, params.width),
+        height: Math.max(50, params.height),
+      }
+      updateNodeData({ id, data: { ...data, size: nextSize } })
     },
     [data, id, updateNodeData],
   )
+
   const width = measuredWidth ?? data.size?.width ?? option.size.width
   const height = measuredHeight ?? data.size?.height ?? option.size.height
+  const labelText = data.label?.trim() ? data.label : "Untitled"
+
+  const renderHandle = (type: "source" | "target", position: Position, side: string) => {
+    const handleId = `${id}-${type}-${side}`
+    const isSourceNode = connectionState?.active && connectionState.sourceNodeId === id
+    const isHovered = connectionState?.active && hoveredTargetHandle === handleId
+    const isVisible = selected || isSourceNode || (connectionState?.active && type === "target") || isHovered
+    const opacity = isHovered || selected || isSourceNode ? 1 : connectionState?.active ? 0.35 : 0.25
+
+    return (
+      <Handle
+        key={`${type}-${side}`}
+        id={handleId}
+        type={type}
+        position={position}
+        isConnectable
+        onMouseEnter={(event) => {
+          if (type === "target" && connectionState?.active) {
+            event.stopPropagation()
+            setHoveredTargetHandle(handleId)
+          }
+        }}
+        onMouseLeave={(event) => {
+          if (type === "target" && connectionState?.active) {
+            event.stopPropagation()
+            if (hoveredTargetHandle === handleId) {
+              setHoveredTargetHandle(null)
+            }
+          }
+        }}
+        className="!h-3 !w-3 !rounded-full !border-2 !border-white !bg-white"
+        style={{
+          opacity,
+          visibility: isVisible ? "visible" : "hidden",
+          boxShadow: isHovered || selected || isSourceNode ? "0 0 0 2px rgba(255,255,255,0.24)" : "none",
+          transform: "translate(-50%, -50%)",
+          zIndex: 30,
+        }}
+      />
+    )
+  }
 
   return (
     <>
-      <NodeResizer
-        isVisible={selected}
-        minWidth={80}
-        minHeight={50}
-        color="var(--accent-primary)"
-        handleStyle={{ width: 8, height: 8, borderRadius: "3px", background: "var(--bg-surface)", border: "1px solid var(--accent-primary)" }}
-        lineStyle={{ borderColor: "var(--accent-primary)" }}
-        onResize={handleResize}
-      />
+      {renderHandle("target", Position.Left, "left")}
+      {renderHandle("source", Position.Left, "left")}
+      {renderHandle("target", Position.Right, "right")}
+      {renderHandle("source", Position.Right, "right")}
+      {renderHandle("target", Position.Top, "top")}
+      {renderHandle("source", Position.Top, "top")}
+      {renderHandle("target", Position.Bottom, "bottom")}
+      {renderHandle("source", Position.Bottom, "bottom")}
+      {selected && (
+        <>
+          <NodeResizeControl
+            position="top-left"
+            minWidth={80}
+            minHeight={50}
+            keepAspectRatio
+            color="#ffffff"
+            style={{ width: 10, height: 10, borderRadius: "9999px", background: "#ffffff", border: "1px solid rgba(255,255,255,0.9)", cursor: "nwse-resize" }}
+            onResize={handleResize}
+          />
+          <NodeResizeControl
+            position="top-right"
+            minWidth={80}
+            minHeight={50}
+            keepAspectRatio
+            color="#ffffff"
+            style={{ width: 10, height: 10, borderRadius: "9999px", background: "#ffffff", border: "1px solid rgba(255,255,255,0.9)", cursor: "nesw-resize" }}
+            onResize={handleResize}
+          />
+          <NodeResizeControl
+            position="bottom-left"
+            minWidth={80}
+            minHeight={50}
+            keepAspectRatio
+            color="#ffffff"
+            style={{ width: 10, height: 10, borderRadius: "9999px", background: "#ffffff", border: "1px solid rgba(255,255,255,0.9)", cursor: "nesw-resize" }}
+            onResize={handleResize}
+          />
+          <NodeResizeControl
+            position="bottom-right"
+            minWidth={80}
+            minHeight={50}
+            keepAspectRatio
+            color="#ffffff"
+            style={{ width: 10, height: 10, borderRadius: "9999px", background: "#ffffff", border: "1px solid rgba(255,255,255,0.9)", cursor: "nwse-resize" }}
+            onResize={handleResize}
+          />
+          <NodeResizeControl
+            position="left"
+            minWidth={80}
+            minHeight={50}
+            resizeDirection="horizontal"
+            color="transparent"
+            style={{ width: 14, height: 14, border: "1px solid transparent", background: "transparent", cursor: "ew-resize", opacity: 0 }}
+            onResize={handleResize}
+          />
+          <NodeResizeControl
+            position="right"
+            minWidth={80}
+            minHeight={50}
+            resizeDirection="horizontal"
+            color="transparent"
+            style={{ width: 14, height: 14, border: "1px solid transparent", background: "transparent", cursor: "ew-resize", opacity: 0 }}
+            onResize={handleResize}
+          />
+          <NodeResizeControl
+            position="top"
+            minWidth={80}
+            minHeight={50}
+            resizeDirection="vertical"
+            color="transparent"
+            style={{ width: 14, height: 14, border: "1px solid transparent", background: "transparent", cursor: "ns-resize", opacity: 0 }}
+            onResize={handleResize}
+          />
+          <NodeResizeControl
+            position="bottom"
+            minWidth={80}
+            minHeight={50}
+            resizeDirection="vertical"
+            color="transparent"
+            style={{ width: 14, height: 14, border: "1px solid transparent", background: "transparent", cursor: "ns-resize", opacity: 0 }}
+            onResize={handleResize}
+          />
+        </>
+      )}
       <ShapeVisual
         shape={data.shape ?? "rectangle"}
         width={width}
         height={height}
         fill={data.color ?? NODE_COLORS[0].fill}
-        label={isEditing ? undefined : data.label || "Untitled"}
+        label={isEditing ? undefined : labelText}
         selected={selected}
         onDoubleClick={(event) => {
           event.preventDefault()
@@ -182,8 +316,14 @@ function CanvasNodeRenderer({ id, data, selected, width: measuredWidth, height: 
           onChange={handleLabelChange}
           onBlur={finishEditing}
           onKeyDown={handleLabelKeyDown}
-          onMouseDown={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
+          onMouseDown={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+          }}
+          onPointerDown={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+          }}
           className="nodrag nopan absolute inset-1 z-20 resize-none overflow-hidden rounded-md border border-accent-primary bg-surface/90 px-3 py-2 text-center text-sm leading-tight text-copy-primary outline-none"
           placeholder="Untitled"
           aria-label="Node label"
@@ -202,6 +342,17 @@ function CanvasInner() {
   const nodeCounter = useRef(0)
   const [draggingShape, setDraggingShape] = useState<ShapeDragPayload | null>(null)
   const [dragPreview, setDragPreview] = useState<{ x: number; y: number } | null>(null)
+  const [connectionState, setConnectionState] = useState<ConnectionState>({
+    active: false,
+    sourceNodeId: null,
+    sourceHandleId: null,
+  })
+  const canvasNodeTypes = useMemo(
+    () => ({
+      canvasNode: (props: NodeProps<CanvasNode>) => <CanvasNodeRenderer {...props} connectionState={connectionState} />,
+    }),
+    [connectionState],
+  )
 
   const migrateLegacyFlowStorage = useMutation(({ storage }) => {
     const storedFlow = storage.get("flow") as unknown
@@ -374,6 +525,30 @@ function CanvasInner() {
     }
   }, [draggingShape])
 
+  const handleConnectStart = useCallback((_: unknown, params: { nodeId?: string | null; handleId?: string | null }) => {
+    setConnectionState({
+      active: true,
+      sourceNodeId: params.nodeId ?? null,
+      sourceHandleId: params.handleId ?? null,
+    })
+  }, [])
+
+  const handleConnectEnd = useCallback(() => {
+    setConnectionState({
+      active: false,
+      sourceNodeId: null,
+      sourceHandleId: null,
+    })
+  }, [])
+
+  const isValidConnection = useCallback((connection: { source: string; target: string; sourceHandleId?: string | null; targetHandleId?: string | null }) => {
+    if (!connection.source || !connection.target) {
+      return false
+    }
+
+    return connection.source !== connection.target
+  }, [])
+
   const handleDragEnd = useCallback(() => {
     setDraggingShape(null)
     setDragPreview(null)
@@ -413,7 +588,11 @@ function CanvasInner() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onConnectStart={handleConnectStart}
+        onConnectEnd={handleConnectEnd}
+        isValidConnection={isValidConnection}
         nodeTypes={canvasNodeTypes}
+        nodesConnectable
         connectionMode={ConnectionMode.Loose}
         fitView
       >
