@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Node resizing and inline label editing complete and verified
+- Collaborative canvas node system complete and verified: shape rendering, resize handles, inline label editing, connector handles, side/corner resizing behavior, and production validation are in place.
 
 ## Current Goal
 
-- Maintain the verified collaborative editor foundation while preparing the next canvas enhancement in the project backlog.
+- Maintain the verified collaborative editor foundation and keep the canvas node interaction model aligned with the feature specs, real React Flow runtime behavior, and the project’s build checks.
 
 ## Completed
 
@@ -67,11 +67,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- No active implementation blockers; the next canvas enhancement is queued for the next feature spec.
+- No active implementation blockers; the finalized node interaction layer is complete and verified against the canvas feature specs.
 
 ## Next Up
 
-- Read and implement next planned feature from context/feature-specs/
+- Continue with the next planned feature from context/feature-specs/ once the canvas node system remains stable under real editor use.
 
 ## Open Questions
 
@@ -116,3 +116,9 @@ Update this file whenever the current phase, active feature, or implementation s
 - Completed the node-shape follow-up by tracking native dragover events globally so the ghost preview remains attached to the cursor across the canvas, clearing it on drag cancellation, and removing duplicate legacy migration writes. Re-verified with `npm run build` and `npm run lint`.
 - Prepared the feature-13 commit boundary; completed implementation of `context/feature-specs/14-node-editing.md` with resize handles, inline label editing, blur/Escape close behavior, and collaborative state updates through the existing Liveblocks flow.
 - Verified the node-editing work with `npm run build` and kept the canvas logic within the existing collaborative node state flow and prior shape-rendering scope.
+- Confirmed the collaborative node interaction layer matches the node-shape and node-editing specs: selected nodes expose resize handles, min-size constraints are enforced, labels can be edited inline, editing closes on blur/Escape, and React Flow connection handles remain available for node linking.
+- Re-ran the build verification after the final canvas repair and confirmed production compilation remains successful.
+- Implemented the follow-up resize and connector fixes in `context/feature-specs/15-node-issues`: resizing no longer keeps a locked aspect ratio, handles are visible by default with low opacity and full-white highlights on selection/hover, and valid source-to-target node connections are handled through React Flow’s actual connection lifecycle.
+- Verified the node interaction stack with `npm run lint` and `npm run build`; lint reports only the existing external-avatar `<img>` warning in the share dialog, while the app builds successfully without type errors.
+- Implemented `context/feature-specs/16-node-resizing-behaviour.md`; corner handles now preserve aspect ratio while side handles resize one axis only, with direction-appropriate cursor semantics, minimum-size guardrails, and preserved connection behavior.
+- Revalidated the final canvas state with `npm run lint` and `npm run build`; the project compiles successfully and the remaining lint result is a pre-existing warning in the shared avatar image component, not a canvas error.

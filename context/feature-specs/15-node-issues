@@ -1,0 +1,90 @@
+### Node Resizing & Connection Interaction Fixes
+
+Please update the node editor so that resizing and node-to-node connections work intuitively and reliably.
+
+#### 1. Node Resizing
+
+Currently, node resizing maintains the aspect ratio.
+
+Change this behavior so that **width and height can be resized independently**.
+
+* The user should be able to increase or decrease the **width only** without changing the height.
+* The user should be able to increase or decrease the **height only** without changing the width.
+* The aspect ratio should **not be locked**.
+* Make sure the existing resize handles still work correctly and do not interfere with node dragging or connection interactions.
+
+#### 2. Connection Points / Handles
+
+Connection points (dots/handles) should behave based on the user's interaction.
+
+**Default state:**
+
+* When no node is selected, connection points should remain visible but have a **slightly transparent/low-opacity appearance**.
+* They should not be completely invisible.
+
+**When a node is selected:**
+
+* All connection points on the selected node should become **fully visible/white**.
+* This should clearly indicate that the node is ready for a connection.
+
+#### 3. Connecting One Node to Another
+
+When the user selects a node and starts dragging a connection wire from one of its connection points:
+
+* Keep the selected node's connection points fully visible.
+* As the user drags the wire toward another node, the connection points on the **target node** should become clearly visible.
+* When the cursor hovers over a valid connection point on the target node, that specific point should become **fully white/highlighted**.
+* This should provide clear visual feedback showing exactly where the connection can be attached.
+* Other non-target connection points should remain slightly transparent.
+
+The intended interaction is:
+
+**Select Node A → Connection points on A become white → Drag from a connection point → Move toward Node B → Node B's connection points become visible → Hover over a valid point → That point becomes bright white → Release → Connection is created.**
+
+#### 4. Fix Connection/Attachment Functionality
+
+There is currently a functional bug:
+
+**Dragging a wire from one node to another does not successfully create/attach the connection.**
+
+Please investigate and fix the actual connection logic, not just the visual appearance.
+
+Verify that:
+
+* A connection can be started from a valid source handle.
+* The connection wire follows the cursor while dragging.
+* A valid target handle can be detected while hovering.
+* The target handle provides visual feedback when it is a valid drop target.
+* Releasing the mouse creates the connection between the two nodes.
+* The connection remains attached to both nodes after creation.
+* Moving either node after connecting it keeps the connection correctly attached.
+* Invalid connection targets should not create a connection.
+* Existing connections should continue to work after resizing or moving nodes.
+
+#### 5. Important UX Requirement
+
+The visual feedback should make it immediately obvious:
+
+* **Which node is selected**
+* **Which connection points are available**
+* **Which node can receive the connection**
+* **Which exact connection point is currently being targeted**
+
+Do not change unrelated functionality or the existing visual design.
+
+### Acceptance Criteria
+
+The implementation is complete only when all of the following work:
+
+1. Nodes can be resized horizontally without changing height.
+2. Nodes can be resized vertically without changing width.
+3. Aspect ratio is no longer forced during resizing.
+4. Connection points are slightly visible by default.
+5. Selecting a node makes its connection points fully white.
+6. Starting a connection keeps the source handles clearly visible.
+7. Hovering over another node reveals its valid target handles.
+8. Hovering directly over a valid target handle highlights that handle in white.
+9. Releasing on a valid target handle successfully creates the connection.
+10. Connections remain correctly attached when nodes are moved or resized.
+11. The connection interaction works reliably, not just visually.
+12. Do not break existing node dragging, resizing, selection, or connection behavior.
