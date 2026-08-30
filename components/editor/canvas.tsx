@@ -183,10 +183,10 @@ function CollaboratorAvatarStack({ currentUserId, others }: { currentUserId: str
                   <img
                     src={user.info.avatar}
                     alt={displayName}
-                    className="h-8 w-8 rounded-full border border-white/15 bg-surface object-cover shadow-sm ring-2 ring-slate-950/70"
+                    className="h-8 w-8 rounded-full border border-white/15 bg-[#111318] object-cover shadow-sm ring-2 ring-slate-950/70"
                   />
                 ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-surface-elevated text-[10px] font-semibold text-copy-primary shadow-sm ring-2 ring-slate-950/70">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#161820] text-[10px] font-semibold text-[#eef1f3] shadow-sm ring-2 ring-slate-950/70">
                     {initials}
                   </div>
                 )}
@@ -195,7 +195,7 @@ function CollaboratorAvatarStack({ currentUserId, others }: { currentUserId: str
           })}
 
           {overflowCount > 0 && (
-            <div className="relative z-10 ml-[-10px] flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-surface-elevated text-[10px] font-semibold text-copy-primary shadow-sm ring-2 ring-slate-950/70">
+            <div className="relative z-10 ml-[-10px] flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#161820] text-[10px] font-semibold text-[#eef1f3] shadow-sm ring-2 ring-slate-950/70">
               +{overflowCount}
             </div>
           )}
@@ -242,10 +242,11 @@ function LiveCursorLayer({ currentUserId, others }: { currentUserId: string | nu
               <path d="M1 1L13 8L8 9L9.5 15L6.5 13.5L4.5 15.5L1 1Z" fill={color} />
             </svg>
             <div
-              className="mt-1 inline-flex items-center rounded-full border border-white/10 px-2 py-1 text-[10px] font-medium text-slate-950 shadow-sm"
+              className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2 py-1 text-[10px] font-medium text-slate-950 shadow-sm"
               style={{ backgroundColor: color }}
             >
-              {displayName}
+              {user.presence?.thinking && <span className="inline-flex h-2.5 w-2.5 animate-spin rounded-full border border-slate-950/30 border-t-slate-950/90" aria-label="AI thinking" />}
+              <span>{displayName}</span>
             </div>
           </div>
         )
@@ -1056,7 +1057,7 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
         connectionMode={ConnectionMode.Loose}
         fitView
       >
-        <Background color="#333" gap={16} size={1} />
+        <Background color="rgba(255, 255, 255, 0.045)" gap={22} size={1.5} />
         <MiniMap position="bottom-right" className="canvas-minimap" />
       </ReactFlow>
 
@@ -1066,17 +1067,17 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-24">
         <div className="relative h-full w-full">
           <div className="pointer-events-auto absolute bottom-4 left-4 flex items-end gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-surface-border bg-surface/85 text-white shadow-lg backdrop-blur-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-[rgba(17,19,24,0.72)] text-white shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl">
               <NextLogoMark />
             </div>
 
-            <div className="flex items-center overflow-hidden rounded-full border border-surface-border bg-surface/85 shadow-lg backdrop-blur-sm">
+            <div className="flex items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-[rgba(17,19,24,0.72)] shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl">
               <div className="flex items-center gap-1 p-1">
                 <button
                   type="button"
                   aria-label="Zoom out"
                   onClick={handleZoomOut}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-copy-primary transition hover:bg-surface-elevated hover:text-brand"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-[#98a1ab] transition hover:bg-white/[0.06] hover:text-[#35e0d0]"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
@@ -1084,7 +1085,7 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
                   type="button"
                   aria-label="Fit view"
                   onClick={handleFitView}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-copy-primary transition hover:bg-surface-elevated hover:text-brand"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-[#98a1ab] transition hover:bg-white/[0.06] hover:text-[#35e0d0]"
                 >
                   <ScanSearch className="h-4 w-4" />
                 </button>
@@ -1092,13 +1093,13 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
                   type="button"
                   aria-label="Zoom in"
                   onClick={handleZoomIn}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-copy-primary transition hover:bg-surface-elevated hover:text-brand"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-[#98a1ab] transition hover:bg-white/[0.06] hover:text-[#35e0d0]"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="h-8 w-px bg-surface-border/80" />
+              <div className="h-6 w-px bg-white/[0.08]" />
 
               <div className="flex items-center gap-1 p-1">
                 <button
@@ -1106,7 +1107,7 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
                   aria-label="Undo"
                   onClick={handleUndo}
                   disabled={!canUndo}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-copy-primary transition hover:bg-surface-elevated hover:text-brand disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-copy-primary"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-[#98a1ab] transition hover:bg-white/[0.06] hover:text-[#35e0d0] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#98a1ab]"
                 >
                   <Undo2 className="h-4 w-4" />
                 </button>
@@ -1115,7 +1116,7 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
                   aria-label="Redo"
                   onClick={handleRedo}
                   disabled={!canRedo}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-copy-primary transition hover:bg-surface-elevated hover:text-brand disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-copy-primary"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-[#98a1ab] transition hover:bg-white/[0.06] hover:text-[#35e0d0] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#98a1ab]"
                 >
                   <Redo2 className="h-4 w-4" />
                 </button>
@@ -1123,7 +1124,7 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
             </div>
           </div>
 
-          <div className="pointer-events-auto absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-surface-border bg-surface/85 px-3 py-2 shadow-lg backdrop-blur-sm">
+          <div className="pointer-events-auto absolute bottom-4 left-1/2 -translate-x-1/2 rounded-2xl border border-white/[0.08] bg-[rgba(17,19,24,0.72)] px-3 py-2 shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl">
             <div className="flex items-center gap-2">
               {NODE_SHAPES.map((shape) => (
                 <button
@@ -1132,7 +1133,7 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
                   draggable
                   onDragStart={(event) => handleShapeDragStart(event, shape.name)}
                   onDragEnd={handleDragEnd}
-                  className="flex h-12 w-12 select-none items-center justify-center rounded-full border border-surface-border bg-surface-muted text-lg text-copy-primary transition hover:border-accent-primary hover:bg-surface-elevated"
+                  className="flex h-10 w-10 select-none items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-base text-[#eef1f3] transition hover:border-[#35e0d0]/50 hover:bg-[#35e0d0]/10 hover:text-[#35e0d0] active:scale-95"
                   title={shape.label}
                   aria-label={`Add ${shape.label}`}
                 >

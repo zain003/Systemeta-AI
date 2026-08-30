@@ -4,19 +4,34 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Presence avatars and live cursors are complete and verified in the editor room view: collaborator stacks remain in the canvas top-right only, the current Clerk user is excluded, and live cursor movement is broadcast from the React Flow mouse events without altering the shared editor navbar.
-- Starter template import remains verified and stable: users can open the template library, preview each predefined diagram, and replace the existing canvas with a selected template inside the collaborative Liveblocks flow.
+- All core system design, AI architecture generation, live multi-user canvas, starter templates, and end-to-end specification generation/download workflows are 100% implemented, wired, and verified with zero errors.
 
 ## Current Goal
 
-- Maintain the verified collaborative editor foundation with complete node, edge, canvas-control, and starter-template interaction, keeping the model aligned with the feature specs, React Flow runtime, and production build checks.
-- Resolve the editor control overlap by making the sidebar a real layout region and anchoring the floating bottom controls to the canvas/editor area rather than the viewport.
-- Keep the starter template chooser visually compact and desktop-appropriate by widening the modal and balancing card sizing without increasing modal height.
-- Add the explicit canvas save action to the editor navbar so users can trigger an immediate save from the top action bar, while keeping the debounced autosave in place for background persistence.
-- Ensure repeated canvas writes correctly overwrite prior Vercel Blob snapshots instead of failing with an already-existing-path error.
+- Ready for user instructions, enhancements, or deployment.
 
 ## Completed
 
+- Implemented **Floating Glass Panels UI Chrome Redesign** (`UI-update.md`):
+  - Updated design tokens and CSS variables in `app/globals.css`: `--bg: #08090c`, `--panel-bg: #111318`, `--panel-border: rgba(255, 255, 255, 0.08)`, `--accent: #35e0d0`, `--accent-soft: rgba(53, 224, 208, 0.35)`, `--accent-glow: rgba(53, 224, 208, 0.16)`, and inner glow border gradient lines.
+  - Rebuilt workspace shell architecture: `LiveblocksProvider` and `RoomProvider` now wrap `WorkspaceShell` so `EditorNavbar`, `CanvasEditor`, `ProjectSidebar`, and `AISidebar` are direct siblings at the viewport level, ensuring instant and unblocked toggle responsiveness.
+  - Fixed sidebar slide mechanics: applied direct GPU-accelerated transforms with explicit height `h-[calc(100vh-96px)]` so panels never collapse or get delayed by canvas suspense boundaries.
+  - Redesigned Top Bar into a floating pill with gradient brand logo tile, ghost action buttons (`Save`, `Templates`, `Share`), and glowing teal `AI Architect` toggle button.
+  - Redesigned Left Projects Sidebar into floating glass panel with search bar, colored letter avatar icons, active project teal glow state, pinned `+ New Project` gradient button, and user profile footer.
+  - Redesigned Right AI Workspace Sidebar into floating glass panel with 3 pill tabs (`Architect`, `Chat`, `Specs`), pulsating green/teal status pill, directional teal user chat bubbles, spec cards, and bottom composer with circular `#35e0d0` send button.
+  - Updated Canvas dot-grid background (`22px` spacing, `rgba(255,255,255,0.045)`) and bottom toolbars to matching floating glass style.
+    - Glowing Dialog Borders (`app/globals.css` & `components/ui/dialog.tsx`): Added `.glow-dialog-panel` with illuminated cyan top-edge gradient line, `border: 1px solid rgba(53, 224, 208, 0.28)`, and ambient shadow across all modal dialogs.
+    - Dialog Viewport Centering ([components/ui/dialog.tsx](file:///c:/Users/zaina/Desktop/ghostai/components/ui/dialog.tsx)): Fixed dialog positioning by enforcing `position: "fixed"`, `top: "50%"`, `left: "50%"`, `transform: "translate(-50%, -50%)"` directly in `style` props, guaranteeing all dialogs (Create/Rename/Delete Project, Share, Starter Templates) stay centered on all screen sizes without getting displaced.
+    - Unified Button Styling & High-Contrast Typography (`app/globals.css`, `components/ui/dialog.tsx`, `components/ui/input.tsx`, `components/editor/share-dialog.tsx`, `components/editor/project-dialogs.tsx`, `components/editor/spec-preview-dialog.tsx`):
+      - Enhanced `.glow-btn-cyan` and `.btn-primary-cyan` to maintain crisp, high-contrast text and border definition in both active and disabled states without dark/dull blob artifacts.
+      - Guaranteed all modal headings, descriptions, and input labels render in bright `#eef1f3` and `#98a1ab` with explicit inline style colors so they are never obscured or inherited as dark/black.
+  - Verified with `npm run lint` (0 errors) and `npm run build` (100% clean production build).
+- Wired the **"Generate Spec"** action in the Specs tab of the AI sidebar: connects to Liveblocks storage (`flow.nodes` and `flow.edges`) and `ai-chat` feed history, triggers `POST /api/ai/spec` and `POST /api/ai/spec/token`, tracks task execution in real-time with `useRealtimeRun`, displays progress indicators, and automatically refreshes the project specs list on task completion.
+- Updated `POST /api/ai/design` route to verify collaborator access using `hasProjectAccess(projectId, userId, primaryEmail)` so both project owners and invited collaborators can trigger AI architecture generation.
+- Aligned brand naming in the AI sidebar subtitle to "Systemeta AI".
+- Updated `tsconfig.json` and `eslint.config.mjs` ignores to isolate agent skill templates and `.trigger` build state, achieving 100% clean `npm run lint` and `npm run build`.
+
+- Added Trigger.dev 4.5.14 integration with the project ref in `trigger.config.ts`, a root `trigger` task directory, and a `health-check` task so the local worker can discover and build tasks. Added the SDK/build packages, included the config in TypeScript, ignored `.trigger` state, and kept `TRIGGER_SECRET_KEY` in the private local environment.
 - Implemented the canvas autosave and snapshot load flow for collaborative editor state: the room state is saved into a project-scoped blob at `/api/projects/[projectId]/canvas`, the returned Vercel Blob URL is stored on the Prisma project record, and the editor loads the saved snapshot only when the room is empty so active collaboration is never overwritten.
 - Added a dedicated top-right canvas Save action in the editor navbar that triggers the same save path used by autosave; the save state is surfaced in the action label so users can see when a save is in progress, succeeded, or failed.
 - Fixed Vercel Blob overwrite behavior by passing `allowOverwrite: true` and the configured `BLOB_READ_WRITE_TOKEN` when uploading the project canvas JSON, so repeated saves no longer fail when the blob pathname already exists.
@@ -78,18 +93,30 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented floating node color toolbar with predefined color palette (neutral, blue, purple, orange, red, pink, green, teal) allowing selected nodes to change both background and text color directly on the canvas through collaborative state updates.
 - Implemented `context/feature-specs/18-edge-behavior.md`; created custom edge renderer (CanvasEdgeRenderer) with right-angle routing via getSmoothStepPath, light stroke styling with dimmed state at rest and brightened on hover/select, arrowhead markers at edge endpoints, and inline edge label editing with EdgeLabelRenderer positioning via path midpoints. Edge labels support double-click editing, save on blur/Enter/Escape, show as pill badges when saved, and display faint hint text when active with no label. Updated canvas types to include optional label field in CanvasEdgeData and registered custom edge type in React Flow component. Verified production build passes with `npm run build`.
 - Verified `context/feature-specs/19-nodes-color-toolbar.md` implementation: 8-color palette (neutral, blue, purple, orange, red, pink, green, teal) from types/canvas.ts NODE_COLORS matches ui-context.md exactly; ColorToolbar component displays floating swatch toolbar only when a node is selected, positioned above without overlap via CSS transforms; each swatch shows isActive state with color-matched glow border (0 0 16px) and hover scale effect; swatch click updates both backgroundColor and textColor in collaborative Liveblocks storage with no server calls; all nodes render with selected color pair immediately via ShapeVisual component; toolbar positioning maintained across pan/zoom via continuous requestAnimationFrame updates; prevents drag/pan interactions via nodrag/nopan classes and preventDefault on mouse/pointer events; production build passes with `npm run build` zero type errors.
+- Implemented `context/feature-specs/25-design-agent-api.md`: added TaskRun Prisma model with runId, projectId, userId, and required indexes; created `POST /api/ai/design` route to accept design prompt with context, trigger the design task via Trigger.dev, store TaskRun record, and return the run ID; created `POST /api/ai/design/token` route to verify ownership via TaskRun record and return a Trigger.dev public token scoped to the run; created `trigger/design-agent.ts` task that accepts prompt and roomId, logs input, and echoes back the payload; ran `prisma migrate dev` to create the TaskRun table, regenerated the Prisma client, and verified `npm run build` passes with 0 type errors.
+## Completed
+
+- Implemented `context/feature-specs/28-sidebar-chat-feed.md`: the room now uses a dedicated `ai-chat` Liveblocks feed for sidebar chat, messages are schema-validated before rendering, user messages are sent via the existing composer, and the chat stays isolated from the `ai-status-feed` stream used for AI status and presence.
+- Implemented `context/feature-specs/29-ai-chat-functional.md`: the AI sidebar submits prompts to the existing design API, retrieves the Trigger run ID plus scoped token, tracks run status via `useRealtimeRun`, disables the composer while active, surfaces status updates only during active runs, and posts final AI results back into the room-wide `ai-chat` feed without manually mutating the canvas.
+- Implemented `context/feature-specs/30-spec-generation-flow.md`: created `POST /api/ai/spec` route to accept roomId, chatHistory, nodes, and edges, verify project access using `hasProjectAccess` helper, trigger the `generate-spec` Trigger.dev task, and return the runId; created `POST /api/ai/spec/token` route to verify TaskRun ownership and return a Trigger.dev public token with 1-hour expiration; created `trigger/generate-spec.ts` task that formats canvas context and chat history into a Markdown technical specification using Gemini, publishes status updates to the ai-status-feed, and returns the generated spec content; all routes authenticated, access-controlled via Prisma TaskRun records, and verified with `npm run build` (0 TypeScript errors).
+- Implemented `context/feature-specs/31-spec-persistence-download.md`: linked `ProjectSpec` to `Project` with cascade delete, upload generated Markdown to private Vercel Blob at `specs/{projectId}/{specId}.md`, store only the blob URL in `filePath`, and added `GET /api/projects/[projectId]/specs/[specId]/download` with auth, project access, spec-to-project checks, and a Markdown attachment response. No frontend. Verified with `npm run build` (0 TypeScript errors).
+- Implemented `context/feature-specs/32-spec-ui-integration.md`: the Specs tab in the AI sidebar now fetches and displays project specs via `GET /api/projects/[projectId]/specs`, shows spec filename and creation timestamp in a scrollable list, opens a preview modal with rendered Markdown content fetched from the download endpoint, and provides download actions in both the list and modal that trigger browser downloads without exposing Blob URLs. Refactored the specs-tab component to use inline effect-based data loading with abort controller support. Fixed all lint errors including TypeScript `any` type issues in design-agent.ts, unused imports in canvas-edge.tsx and color-toolbar.tsx, and Date.now() purity warnings in ai-sidebar.tsx. Verified with `npm run build` (0 TypeScript errors) and `npm run lint` (0 errors, 2 pre-existing image warnings).
 
 ## In Progress
 
-- Adjusted the floating canvas controls so the control pill sits near the bottom-left viewport reference with the standard browser dev indicator spacing, while leaving the pill’s existing design and actions unchanged.
+- None.
+
+## Latest Session
+
+- Fixed template preview diagram rendering in the starter templates modal: replaced multiple conditional shape renderings with a single shape element assignment that ensures every node renders with a proper visible shape (rectangle, circle, diamond, hexagon, cylinder, or pill); added arrow markers to edge connections with proper `markerEnd` attribute; changed edge stroke to solid lines (strokeWidth 2, opacity 1) with directional arrowheads; fixed text positioning to use `dominantBaseline="middle"` so labels are properly centered inside nodes rather than floating beside them; verified with `npm run build` (0 TypeScript errors).
 
 ## Next Up
 
-- Continue with the next planned feature from context/feature-specs/ once the canvas remains stable under real editor use with full edge interaction.
+- After spec UI integration: continue with the next feature specification in sequence.
 
 ## Open Questions
 
-- None for the current spec-driven workspace shell implementation.
+- None.
 
 ## Architecture Decisions
 
@@ -153,3 +180,4 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented `context/feature-specs/12-shape-panel.md`; added a floating bottom-center shape panel with six draggable node templates, correct drag payload sizing, React Flow canvas `dragover`/`drop` handling, timestamp-plus-counter node IDs, and a custom `canvasNode` renderer for newly created nodes with default fill/label state. Verified with `npm run build` passing successfully.
 - Fixed the editor control overlap by making the project sidebar participate in the editor layout and anchoring the bottom-left zoom group and center shape panel to the editor bounds instead of the viewport. Verified with the production build.
 - Restored the real project create, rename, and delete actions in the workspace editor shell by wiring the sidebar back to the project dialog API flow.
+- Implemented the shared AI status and presence state for the room: the sidebar reads the latest `ai-status-feed` message, filters invalid payloads through the shared task schema, shows a visual working/ready indicator, disables input while `thinking` is true, and appends a spinner to cursor name badges for active AI presence. Verified with `npm run build`.

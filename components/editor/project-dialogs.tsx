@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react"
 
-import { Button } from "@/components/ui/button"
 import { Dialog } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { EditorDialog } from "@/components/editor/editor-dialog"
@@ -58,20 +57,26 @@ export function ProjectDialogs({
           }
           actions={
             <>
-              <Button onClick={closeDialog} variant="ghost">
+              <button
+                onClick={closeDialog}
+                type="button"
+                className="h-9 rounded-xl border border-white/[0.08] bg-transparent px-4 text-xs font-medium text-[#98a1ab] transition-colors hover:bg-white/[0.04] hover:text-[#eef1f3]"
+              >
                 Cancel
-              </Button>
-              <Button
+              </button>
+              <button
                 disabled={isLoading || !projectName.trim()}
                 onClick={isCreate ? createProject : renameProject}
+                type="button"
+                className="glow-btn-cyan flex h-9 items-center justify-center rounded-xl px-4 text-xs font-semibold"
               >
-                {isCreate ? "Create project" : "Save changes"}
-              </Button>
+                {isLoading ? "Processing..." : isCreate ? "Create project" : "Save changes"}
+              </button>
             </>
           }
         >
-          <div className="space-y-4">
-            <label className="space-y-2 text-sm font-medium text-copy-secondary">
+          <div className="space-y-4 pt-1">
+            <label className="block space-y-2 text-xs font-medium text-[#eef1f3]">
               <span>Project name</span>
               <Input
                 ref={isRename ? inputRef : undefined}
@@ -84,12 +89,14 @@ export function ProjectDialogs({
                     else renameProject()
                   }
                 }}
+                placeholder="e.g. Cloud Payments Gateway"
                 value={projectName}
+                className="h-10 rounded-xl border-white/[0.08] bg-white/[0.03] px-3.5 text-sm text-[#eef1f3] placeholder:text-[#5c636d] focus-visible:border-[#35e0d0]/60 focus-visible:ring-1 focus-visible:ring-[#35e0d0]/30"
               />
             </label>
             {isCreate ? (
-              <p className="text-xs text-copy-muted">
-                Slug: <span className="font-mono text-copy-secondary">{slugPreview}</span>
+              <p className="text-xs text-[#98a1ab]">
+                Slug: <span className="font-mono font-semibold text-[#35e0d0]">{slugPreview}</span>
               </p>
             ) : null}
           </div>
@@ -99,15 +106,24 @@ export function ProjectDialogs({
       <Dialog open={dialog === "delete"} onOpenChange={(open) => !open && closeDialog()}>
         <EditorDialog
           title="Delete project"
-          description={`Delete ${selectedProject?.name ?? "this project"}? This mock action cannot be undone.`}
+          description={`Delete ${selectedProject?.name ?? "this project"}? This action cannot be undone.`}
           actions={
             <>
-              <Button onClick={closeDialog} variant="ghost">
+              <button
+                onClick={closeDialog}
+                type="button"
+                className="h-9 rounded-xl border border-white/[0.08] bg-transparent px-4 text-xs font-medium text-[#98a1ab] transition-colors hover:bg-white/[0.04] hover:text-[#eef1f3]"
+              >
                 Cancel
-              </Button>
-              <Button disabled={isLoading} onClick={deleteProject} variant="destructive">
-                Delete project
-              </Button>
+              </button>
+              <button
+                disabled={isLoading}
+                onClick={deleteProject}
+                type="button"
+                className="flex h-9 items-center justify-center rounded-xl border border-red-500/60 bg-gradient-to-r from-red-500/25 to-red-500/10 px-4 text-xs font-semibold text-red-400 shadow-[0_0_18px_rgba(239,68,68,0.25)] transition-all hover:bg-red-500/30 hover:border-red-500 hover:shadow-[0_0_24px_rgba(239,68,68,0.4)] active:scale-[0.98] disabled:border-white/[0.08] disabled:bg-white/[0.03] disabled:text-[#5c636d]"
+              >
+                {isLoading ? "Deleting..." : "Delete project"}
+              </button>
             </>
           }
         />

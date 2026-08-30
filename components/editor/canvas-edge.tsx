@@ -4,7 +4,6 @@ import {
   BaseEdge,
   EdgeLabelRenderer,
   getSmoothStepPath,
-  useReactFlow,
   type EdgeProps,
 } from "@xyflow/react"
 import { useMutation } from "@liveblocks/react"

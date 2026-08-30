@@ -1,6 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { CANVAS_TEMPLATES, type CanvasTemplate } from "@/components/editor/starter-templates"
 import { type CanvasNode } from "@/types/canvas"
@@ -42,6 +41,20 @@ function TemplatePreview({ template }: { template: CanvasTemplate }) {
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="h-[170px] w-full rounded-[18px] border border-surface-border bg-[#14181d] shadow-inner shadow-black/10">
+      <defs>
+        <marker
+          id="template-arrow"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="5"
+          markerHeight="5"
+          orient="auto"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#cbd5e1" />
+        </marker>
+      </defs>
+
       {template.edges.map((edge) => {
         const source = nodeMap.get(edge.source)
         const target = nodeMap.get(edge.target)
@@ -60,7 +73,19 @@ function TemplatePreview({ template }: { template: CanvasTemplate }) {
         const targetX = (target.position.x - bounds.minX) * scale + padding + targetWidth * scale / 2
         const targetY = (target.position.y - bounds.minY) * scale + padding + targetHeight * scale / 2
 
-        return <line key={edge.id} x1={sourceX} y1={sourceY} x2={targetX} y2={targetY} stroke="#cbd5e1" strokeWidth={1.5} strokeLinecap="round" opacity={0.9} />
+        return (
+          <line
+            key={edge.id}
+            x1={sourceX}
+            y1={sourceY}
+            x2={targetX}
+            y2={targetY}
+            stroke="#cbd5e1"
+            strokeWidth={2}
+            opacity={1}
+            markerEnd="url(#template-arrow)"
+          />
+        )
       })}
 
       {template.nodes.map((node) => {
@@ -71,39 +96,127 @@ function TemplatePreview({ template }: { template: CanvasTemplate }) {
         const fill = node.data.backgroundColor ?? "#1F1F1F"
         const textColor = node.data.textColor ?? "#EDEDED"
         const label = node.data.label ?? "Untitled"
+        const shape = node.data.shape ?? "rectangle"
 
         const commonProps = {
           fill,
           stroke: "rgba(255,255,255,0.6)",
-          strokeWidth: 1.1,
+          strokeWidth: 1.5,
+        }
+
+        // Render shape based on type
+        let shapeElement: React.ReactNode = null
+        
+        if (shape === "circle") {
+          shapeElement = (
+            <ellipse
+              cx={x + nodeWidth / 2}
+              cy={y + nodeHeight / 2}
+              rx={nodeWidth / 2}
+              ry={nodeHeight / 2}
+              {...commonProps}
+            />
+          )
+        } else if (shape === "diamond") {
+          shapeElement = (
+            <polygon
+              points={`${x + nodeWidth / 2},${y} ${x + nodeWidth},${y + nodeHeight / 2} ${x + nodeWidth / 2},${y + nodeHeight} ${x},${y + nodeHeight / 2}`}
+              {...commonProps}
+            />
+          )
+        } else if (shape === "hexagon") {
+          const offset = Math.min(nodeWidth * 0.25, 20)
+          shapeElement = (
+            <polygon
+              points={`${x + offset},${y} ${x + nodeWidth - offset},${y} ${x + nodeWidth},${y + nodeHeight / 2} ${x + nodeWidth - offset},${y + nodeHeight} ${x + offset},${y + nodeHeight} ${x},${y + nodeHeight / 2}`}
+              {...commonProps}
+            />
+          )
+        } else if (shape === "cylinder") {
+          const topHeight = nodeHeight * 0.15
+          shapeElement = (
+            <>
+              <ellipse
+                cx={x + nodeWidth / 2}
+                cy={y + topHeight}
+                rx={nodeWidth / 2}
+                ry={topHeight}
+                {...commonProps}
+              />
+              <rect
+                x={x}
+                y={y + topHeight}
+                width={nodeWidth}
+                height={nodeHeight - topHeight * 2}
+                fill={fill}
+                stroke="none"
+              />
+              <ellipse
+                cx={x + nodeWidth / 2}
+                cy={y + nodeHeight - topHeight}
+                rx={nodeWidth / 2}
+                ry={topHeight}
+                fill={fill}
+                stroke="rgba(255,255,255,0.6)"
+                strokeWidth={1.5}
+              />
+              <line
+                x1={x}
+                y1={y + topHeight}
+                x2={x}
+                y2={y + nodeHeight - topHeight}
+                stroke="rgba(255,255,255,0.6)"
+                strokeWidth={1.5}
+              />
+              <line
+                x1={x + nodeWidth}
+                y1={y + topHeight}
+                x2={x + nodeWidth}
+                y2={y + nodeHeight - topHeight}
+                stroke="rgba(255,255,255,0.6)"
+                strokeWidth={1.5}
+              />
+            </>
+          )
+        } else if (shape === "pill") {
+          shapeElement = (
+            <rect
+              x={x}
+              y={y}
+              width={nodeWidth}
+              height={nodeHeight}
+              rx={nodeHeight / 2}
+              {...commonProps}
+            />
+          )
+        } else {
+          // Default rectangle
+          shapeElement = (
+            <rect
+              x={x}
+              y={y}
+              width={nodeWidth}
+              height={nodeHeight}
+              rx={8}
+              {...commonProps}
+            />
+          )
         }
 
         return (
           <g key={node.id}>
-            {node.data.shape === "circle" ? (
-              <ellipse cx={x + nodeWidth / 2} cy={y + nodeHeight / 2} rx={nodeWidth / 2} ry={nodeHeight / 2} {...commonProps} />
-            ) : null}
-            {node.data.shape === "diamond" ? (
-              <polygon points={`${x + nodeWidth / 2},${y} ${x + nodeWidth},${y + nodeHeight / 2} ${x + nodeWidth / 2},${y + nodeHeight} ${x},${y + nodeHeight / 2}`} {...commonProps} />
-            ) : null}
-            {node.data.shape === "hexagon" ? (
-              <polygon points={`${x + 20},${y} ${x + nodeWidth - 20},${y} ${x + nodeWidth},${y + nodeHeight / 2} ${x + nodeWidth - 20},${y + nodeHeight} ${x + 20},${y + nodeHeight} ${x},${y + nodeHeight / 2}`} {...commonProps} />
-            ) : null}
-            {node.data.shape === "cylinder" ? (
-              <>
-                <ellipse cx={x + nodeWidth / 2} cy={y} rx={nodeWidth / 2} ry={nodeHeight * 0.22} {...commonProps} />
-                <rect x={x} y={y} width={nodeWidth} height={nodeHeight} rx={16} fill={fill} stroke="rgba(255,255,255,0.6)" strokeWidth={1.1} />
-                <path d={`M ${x} ${y + nodeHeight * 0.22} Q ${x + nodeWidth / 2} ${y + nodeHeight * 0.42} ${x + nodeWidth} ${y + nodeHeight * 0.22}`} fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth={1.1} />
-                <path d={`M ${x} ${y + nodeHeight * 0.78} Q ${x + nodeWidth / 2} ${y + nodeHeight * 0.96} ${x + nodeWidth} ${y + nodeHeight * 0.78}`} fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth={1.1} />
-              </>
-            ) : null}
-            {node.data.shape === "pill" ? (
-              <rect x={x} y={y} width={nodeWidth} height={nodeHeight} rx={nodeHeight / 2} {...commonProps} />
-            ) : null}
-            {node.data.shape === undefined || node.data.shape === "rectangle" ? (
-              <rect x={x} y={y} width={nodeWidth} height={nodeHeight} rx={16} {...commonProps} />
-            ) : null}
-            <text x={x + nodeWidth / 2} y={y + nodeHeight / 2 + 4} fill={textColor} fontSize={10} textAnchor="middle" fontWeight={600}>{label}</text>
+            {shapeElement}
+            <text
+              x={x + nodeWidth / 2}
+              y={y + nodeHeight / 2}
+              fill={textColor}
+              fontSize={10}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontWeight={600}
+            >
+              {label}
+            </text>
           </g>
         )
       })}
@@ -119,52 +232,52 @@ export function StarterTemplatesModal({ isOpen, onClose, onImport }: StarterTemp
       }
     }}>
       <DialogContent
-        className="max-h-[76vh] overflow-hidden rounded-[24px] border border-surface-border bg-[#111318]/96 p-0 shadow-[0_18px_56px_rgba(0,0,0,0.45)] backdrop-blur-md"
-        style={{ width: "min(62vw, 960px)", maxWidth: "960px" }}
+        className="glow-dialog-panel max-h-[82vh] overflow-hidden rounded-2xl p-0"
+        style={{ width: "min(68vw, 1000px)", maxWidth: "1000px" }}
       >
-        <div className="flex max-h-[76vh] flex-col">
-          <div className="border-b border-surface-border px-5 py-4 sm:px-6">
-            <DialogHeader className="space-y-2 text-left">
-              <DialogTitle className="text-[clamp(1.7rem,2vw,2.4rem)] font-semibold tracking-[-0.04em] text-copy-primary">
-                Starter templates
+        <div className="flex max-h-[82vh] flex-col">
+          <div className="border-b border-white/[0.08] px-6 py-4">
+            <DialogHeader className="space-y-1 text-left">
+              <DialogTitle className="text-lg font-semibold text-[#eef1f3]">
+                Starter Templates
               </DialogTitle>
-              <DialogDescription className="max-w-3xl text-base leading-relaxed text-copy-secondary">
-                Start from a pre-built architecture instead of drawing from scratch.
+              <DialogDescription className="text-xs text-[#98a1ab]">
+                Select a pre-built cloud architecture to import directly onto your canvas.
               </DialogDescription>
             </DialogHeader>
           </div>
 
-          <div className="flex-1 overflow-hidden p-4 sm:p-5">
+          <div className="flex-1 overflow-y-auto p-5">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {CANVAS_TEMPLATES.map((template) => (
                 <article
                   key={template.id}
-                  className="flex min-w-[260px] flex-col overflow-hidden rounded-[20px] border border-surface-border bg-surface-elevated/80 shadow-[0_6px_20px_rgba(15,23,42,0.12)] transition-colors hover:border-accent-primary/40"
+                  className="flex min-w-[240px] flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3 transition-all hover:border-[#35e0d0]/40 hover:shadow-[0_0_24px_rgba(53,224,208,0.12)]"
                 >
-                  <div className="p-3 pb-2">
+                  <div className="pb-2">
                     <TemplatePreview template={template} />
                   </div>
 
-                  <div className="flex flex-1 flex-col gap-3 px-4 pb-4 pt-2">
-                    <div className="space-y-1.5">
-                      <h3 className="text-[1.05rem] font-semibold text-copy-primary sm:text-[1.2rem]">
+                  <div className="flex flex-1 flex-col gap-3 px-1 pb-1 pt-1">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-[#eef1f3]">
                         {template.name}
                       </h3>
-                      <p className="text-[0.92rem] leading-relaxed text-copy-secondary break-words">
+                      <p className="text-xs leading-relaxed text-[#98a1ab] break-words">
                         {template.description}
                       </p>
                     </div>
 
-                    <Button
+                    <button
                       type="button"
-                      className="mt-auto h-10 w-full rounded-xl text-sm font-medium"
+                      className="glow-btn-cyan mt-auto flex h-9 w-full items-center justify-center rounded-xl text-xs font-semibold"
                       onClick={() => {
                         onImport(template)
                         onClose()
                       }}
                     >
                       Import template
-                    </Button>
+                    </button>
                   </div>
                 </article>
               ))}

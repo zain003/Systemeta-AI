@@ -65,20 +65,31 @@
 :root {
   color-scheme: dark;
 
-  --bg-base: #080809;
-  --bg-surface: #111114;
-  --bg-elevated: #18181c;
-  --bg-subtle: #1e1e23;
-  --border-default: #2a2a30;
-  --border-subtle: #3a3a42;
-  --text-primary: #f0f0f4;
-  --text-secondary: #c0c0cc;
-  --text-muted: #808090;
-  --text-faint: #505060;
-  --accent-primary: #00c8d4;
-  --accent-primary-dim: rgba(0, 200, 212, 0.12);
-  --accent-ai: #6457f9;
-  --accent-ai-text: #8b82ff;
+  /* UI Chrome Design System Variables */
+  --bg: #08090c;
+  --panel-bg: #111318;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --accent: #35e0d0;
+  --accent-soft: rgba(53, 224, 208, 0.35);
+  --accent-glow: rgba(53, 224, 208, 0.16);
+  --text-hi: #eef1f3;
+  --text-mid: #98a1ab;
+  --text-lo: #5c636d;
+
+  --bg-base: #08090c;
+  --bg-surface: #111318;
+  --bg-elevated: #161820;
+  --bg-subtle: #1c1f26;
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --text-primary: #eef1f3;
+  --text-secondary: #98a1ab;
+  --text-muted: #5c636d;
+  --text-faint: #3e444d;
+  --accent-primary: #35e0d0;
+  --accent-primary-dim: rgba(53, 224, 208, 0.12);
+  --accent-ai: #35e0d0;
+  --accent-ai-text: #35e0d0;
   --state-error: #ff4d4f;
   --state-success: #34d399;
   --state-warning: #fbbf24;
@@ -103,22 +114,122 @@
   body {
     @apply bg-base text-copy-primary;
     margin: 0;
+    overflow: hidden;
   }
+}
+
+.floating-glass-panel {
+  background-color: #111318;
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 24px var(--accent-glow);
+}
+
+.glow-border-right {
+  position: relative;
+}
+.glow-border-right::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--accent-soft), transparent);
+  pointer-events: none;
+}
+
+.glow-border-left {
+  position: relative;
+}
+.glow-border-left::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--accent-soft), transparent);
+  pointer-events: none;
+}
+
+.glow-dialog-panel {
+  background-color: #111318;
+  border: 1px solid rgba(53, 224, 208, 0.28);
+  border-radius: 1rem;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.85), 0 0 32px var(--accent-glow);
+  position: relative;
+}
+
+.glow-dialog-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent-soft), transparent);
+  pointer-events: none;
+}
+
+.glow-btn-cyan {
+  border: 1px solid rgba(53, 224, 208, 0.6);
+  background: linear-gradient(135deg, rgba(53, 224, 208, 0.25) 0%, rgba(53, 224, 208, 0.1) 100%);
+  color: #35e0d0;
+  font-weight: 600;
+  box-shadow: 0 0 16px rgba(53, 224, 208, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+.glow-btn-cyan:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(53, 224, 208, 0.4) 0%, rgba(53, 224, 208, 0.2) 100%);
+  border-color: #35e0d0;
+  color: #ffffff;
+  box-shadow: 0 0 24px rgba(53, 224, 208, 0.45);
+}
+.glow-btn-cyan:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.glow-btn-cyan:disabled {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #5c636d;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-primary-cyan {
+  background: linear-gradient(135deg, #35e0d0 0%, #14b8a6 100%);
+  color: #08090c;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(53, 224, 208, 0.35);
+  transition: all 0.2s ease-in-out;
+}
+.btn-primary-cyan:hover:not(:disabled) {
+  filter: brightness(1.12);
+  box-shadow: 0 0 26px rgba(53, 224, 208, 0.5);
+}
+.btn-primary-cyan:disabled {
+  background: rgba(255, 255, 255, 0.06);
+  color: #5c636d;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 .canvas-controls {
   overflow: hidden;
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--panel-border);
   border-radius: 0.75rem;
-  background: var(--bg-surface);
-  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
+  background: var(--panel-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px var(--accent-glow);
 }
 
 .canvas-controls .react-flow__controls-button {
   width: 32px;
   height: 32px;
-  border-bottom: 1px solid var(--border-default);
-  background: var(--bg-surface);
+  border-bottom: 1px solid var(--panel-border);
+  background: transparent;
   color: var(--text-secondary);
   fill: currentColor;
 }
@@ -128,24 +239,27 @@
 }
 
 .canvas-controls .react-flow__controls-button:hover {
-  background: var(--bg-elevated);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--accent-primary);
 }
 
 .canvas-minimap {
   overflow: hidden;
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--panel-border);
   border-radius: 0.75rem;
-  background: var(--bg-surface);
-  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
+  background: var(--panel-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
 .canvas-minimap .react-flow__minimap-mask {
-  fill: var(--bg-base);
-  fill-opacity: 0.76;
+  fill: var(--bg);
+  fill-opacity: 0.85;
 }
 
 .canvas-minimap .react-flow__minimap-node {
-  fill: var(--accent-primary);
-  stroke: var(--border-subtle);
+  fill: var(--accent);
+  stroke: var(--panel-border);
 }
+

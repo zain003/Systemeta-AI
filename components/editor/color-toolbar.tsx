@@ -1,7 +1,7 @@
 "use client"
 
 import { NODE_COLORS } from "@/types/canvas"
-import { MouseEvent, useMemo } from "react"
+import { MouseEvent } from "react"
 
 interface ColorToolbarProps {
   x: number

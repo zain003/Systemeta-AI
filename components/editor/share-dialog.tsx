@@ -111,32 +111,36 @@ export function ShareDialog({
         <DialogHeader>
           <DialogTitle>Share {projectName}</DialogTitle>
           <DialogDescription>
-            {isOwner ? "Invite others to collaborate on this project" : "View collaborators on this project"}
+            {isOwner ? "Invite collaborators to design on this project in real-time." : "View active collaborators on this project."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 pt-1">
           {/* Project Link */}
-          <div className="rounded-lg border border-surface-border bg-surface/50 p-3">
-            <p className="text-xs font-medium text-copy-faint mb-2">Project Link</p>
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+            <p className="mb-2 text-xs font-medium text-[#eef1f3]">Project Link</p>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={projectUrl}
                 readOnly
-                className="flex-1 rounded border border-surface-border bg-surface px-2 py-1 text-xs text-copy-secondary"
+                className="h-8 flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 text-xs text-[#eef1f3] focus:outline-none"
               />
-              <Button size="sm" variant="outline" onClick={copyProjectLink}>
-                <Copy className="h-4 w-4" />
-                {copied ? "Copied!" : "Copy"}
-              </Button>
+              <button
+                type="button"
+                onClick={copyProjectLink}
+                className="flex h-8 items-center gap-1.5 rounded-lg border border-[#35e0d0]/50 bg-gradient-to-r from-[#35e0d0]/20 to-[#35e0d0]/10 px-3 text-xs font-semibold text-[#35e0d0] shadow-[0_0_12px_rgba(53,224,208,0.2)] transition-all hover:bg-[#35e0d0]/30 hover:shadow-[0_0_16px_rgba(53,224,208,0.35)] active:scale-[0.98]"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                <span>{copied ? "Copied!" : "Copy"}</span>
+              </button>
             </div>
           </div>
 
           {/* Invite Form */}
           {isOwner && (
             <form onSubmit={handleInvite} className="space-y-2">
-              <label className="text-xs font-medium text-copy-faint">Invite by email</label>
+              <label className="text-xs font-medium text-[#eef1f3]">Invite by email</label>
               <div className="flex gap-2">
                 <Input
                   type="email"
@@ -144,43 +148,51 @@ export function ShareDialog({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  className="text-xs"
+                  className="h-9 rounded-xl border-white/[0.08] bg-white/[0.03] px-3 text-xs text-[#eef1f3] placeholder:text-[#5c636d] focus-visible:border-[#35e0d0]/50"
                 />
-                <Button type="submit" size="sm" disabled={isLoading || !email.trim()}>
+                <button
+                  type="submit"
+                  disabled={isLoading || !email.trim()}
+                  className="glow-btn-cyan flex h-9 items-center justify-center rounded-xl px-4 text-xs font-semibold"
+                >
                   {isLoading ? "Adding..." : "Add"}
-                </Button>
+                </button>
               </div>
             </form>
           )}
 
           {/* Collaborators List */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-copy-faint">Collaborators</label>
+            <label className="text-xs font-medium text-[#eef1f3]">Collaborators</label>
             {loadingCollaborators ? (
-              <div className="text-xs text-copy-secondary py-2">Loading...</div>
+              <div className="py-2 text-xs text-[#98a1ab]">Loading collaborators...</div>
             ) : collaborators.length === 0 ? (
-              <div className="text-xs text-copy-secondary py-2">No collaborators yet</div>
+              <div className="py-2 text-xs text-[#98a1ab]">No invited collaborators yet</div>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+              <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
                 {collaborators.map((collaborator) => (
                   <div
                     key={collaborator.id}
-                    className="flex items-center gap-3 rounded-lg border border-surface-border bg-surface/50 p-2"
+                    className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-2.5 transition-colors hover:border-white/[0.12]"
                   >
-                    {collaborator.avatarUrl && (
+                    {collaborator.avatarUrl ? (
                       <img
                         src={collaborator.avatarUrl}
                         alt={collaborator.displayName || collaborator.email}
-                        className="h-6 w-6 rounded-full"
+                        className="h-7 w-7 rounded-full border border-white/[0.1]"
                       />
+                    ) : (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#35e0d0]/30 to-[#35e0d0]/10 text-xs font-bold text-[#35e0d0]">
+                        {(collaborator.displayName || collaborator.email).charAt(0).toUpperCase()}
+                      </div>
                     )}
                     <div className="min-w-0 flex-1">
                       {collaborator.displayName && (
-                        <p className="text-xs font-medium text-copy-primary truncate">
+                        <p className="truncate text-xs font-medium text-[#eef1f3]">
                           {collaborator.displayName}
                         </p>
                       )}
-                      <p className="text-xs text-copy-secondary truncate">{collaborator.email}</p>
+                      <p className="truncate text-xs text-[#98a1ab]">{collaborator.email}</p>
                     </div>
                     {isOwner && (
                       <Button
@@ -188,8 +200,9 @@ export function ShareDialog({
                         variant="ghost"
                         onClick={() => handleRemove(collaborator.id, collaborator.email)}
                         aria-label={`Remove ${collaborator.email}`}
+                        className="h-7 w-7 rounded-lg text-[#98a1ab] hover:bg-red-500/10 hover:text-red-400"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     )}
                   </div>
