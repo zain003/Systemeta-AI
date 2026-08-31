@@ -10,6 +10,7 @@ import {
   Position,
   ReactFlow,
   ReactFlowProvider,
+  SelectionMode,
   useReactFlow,
   type NodeProps,
 } from "@xyflow/react"
@@ -935,23 +936,72 @@ function CanvasInner({
     }
   }, [canRedo, redo])
 
+  const deleteNodesAndEdges = useMutation(
+    ({ storage }, params: { nodes?: { id: string }[]; edges?: { id: string }[] }) => {
+      const flow = storage.get("flow") as unknown
+
+      if (!flow || typeof flow !== "object" || !(flow as { get?: unknown }).get || typeof (flow as { get: unknown }).get !== "function") {
+        return
+      }
+
+      const liveFlow = flow as { get: (key: "nodes" | "edges") => LiveMap<string, LiveObject<LsonObject>> }
+      const nodesMap = liveFlow.get("nodes")
+      const edgesMap = liveFlow.get("edges")
+
+      if (!nodesMap || !edgesMap) {
+        return
+      }
+
+      const nodeIdsToDelete = new Set((params.nodes ?? []).map((n) => n.id))
+      const edgeIdsToDelete = new Set((params.edges ?? []).map((e) => e.id))
+
+      // Also clean up any edges connected to the nodes being deleted
+      if (nodeIdsToDelete.size > 0) {
+        edgesMap.forEach((liveEdge, edgeId) => {
+          const edgeData = liveEdge.toJSON() as { source?: string; target?: string }
+          if (
+            (edgeData.source && nodeIdsToDelete.has(edgeData.source)) ||
+            (edgeData.target && nodeIdsToDelete.has(edgeData.target))
+          ) {
+            edgeIdsToDelete.add(edgeId)
+          }
+        })
+      }
+
+      edgeIdsToDelete.forEach((edgeId) => {
+        edgesMap.delete(edgeId)
+      })
+
+      nodeIdsToDelete.forEach((nodeId) => {
+        nodesMap.delete(nodeId)
+      })
+    },
+    [],
+  )
+
+  const handleDeleteSelected = useCallback(() => {
+    const selectedNodes = (nodes ?? []).filter((node) => node.selected)
+    const selectedEdges = (edges ?? []).filter((edge) => edge.selected)
+
+    if (selectedNodes.length === 0 && selectedEdges.length === 0) {
+      return
+    }
+
+    deleteNodesAndEdges({
+      nodes: selectedNodes,
+      edges: selectedEdges,
+    })
+  }, [deleteNodesAndEdges, edges, nodes])
+
   const importTemplate = useCallback(
     (template: CanvasTemplate) => {
       const currentNodes = nodes ?? []
       const currentEdges = edges ?? []
 
-      onNodesChange(
-        currentNodes.map((node) => ({
-          type: "remove",
-          id: node.id,
-        })),
-      )
-      onEdgesChange(
-        currentEdges.map((edge) => ({
-          type: "remove",
-          id: edge.id,
-        })),
-      )
+      deleteNodesAndEdges({
+        nodes: currentNodes,
+        edges: currentEdges,
+      })
 
       const nextNodes = template.nodes.map((node) => ({
         ...node,
@@ -981,7 +1031,7 @@ function CanvasInner({
         })
       })
     },
-    [edges, nodes, onEdgesChange, onNodesChange, reactFlow],
+    [deleteNodesAndEdges, edges, nodes, onEdgesChange, onNodesChange, reactFlow],
   )
 
   useEffect(() => {
@@ -1059,6 +1109,7 @@ function CanvasInner({
     reactFlow,
     handleUndo,
     handleRedo,
+    handleDelete: handleDeleteSelected,
   })
 
   const handleDragEnd = useCallback(() => {
@@ -1112,13 +1163,18 @@ function CanvasInner({
         nodesConnectable
         connectionMode={ConnectionMode.Loose}
         fitView
+        selectionKeyCode={["Control", "Meta", "Shift"]}
+        multiSelectionKeyCode={["Control", "Meta", "Shift"]}
+        selectionMode={SelectionMode.Partial}
+        deleteKeyCode={["Delete", "Backspace"]}
+        onDelete={deleteNodesAndEdges}
+        elementsSelectable
       >
         <Background color="rgba(255, 255, 255, 0.045)" gap={22} size={1.5} />
         <MiniMap
           position="bottom-right"
-          className={`canvas-minimap transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            isAiSidebarOpen ? "-translate-x-[376px]" : "translate-x-0"
-          }`}
+          className={`canvas-minimap transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isAiSidebarOpen ? "-translate-x-[376px]" : "translate-x-0"
+            }`}
         />
       </ReactFlow>
 
@@ -1128,9 +1184,8 @@ function CanvasInner({
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-24">
         <div className="relative h-full w-full">
           <div
-            className={`pointer-events-auto absolute bottom-4 left-4 z-30 flex items-end gap-3 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-              isSidebarOpen ? "translate-x-[304px] lg:translate-x-[336px]" : "translate-x-0"
-            }`}
+            className={`pointer-events-auto absolute bottom-4 left-4 z-30 flex items-end gap-3 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isSidebarOpen ? "translate-x-[304px] lg:translate-x-[336px]" : "translate-x-0"
+              }`}
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-[#111318] text-white shadow-[0_8px_30px_rgba(0,0,0,0.4),0_0_20px_rgba(53,224,208,0.12)]">
               <NextLogoMark />

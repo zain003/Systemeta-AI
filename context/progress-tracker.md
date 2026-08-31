@@ -12,6 +12,18 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- Updated **Sign-in & Sign-up Brand Header Styling** ([auth-shell.tsx](file:///c:/Users/zaina/Desktop/ghostai/components/auth/auth-shell.tsx)):
+  - Enforced explicit inline `color: "#35e0d0"` and multi-layer `textShadow: "0 0 16px rgba(53, 224, 208, 0.6), 0 0 32px rgba(53, 224, 208, 0.3)"` on "Systemeta AI" title next to the brand logo icon for both desktop and mobile auth headers, guaranteeing high-contrast cyan glow visibility.
+  - Verified with `npm run lint` (0 errors) and `npm run build` (100% clean production build).
+
+- Implemented **Canvas Multi-Node Box Selection & Deletion**:
+  - Configured `selectionKeyCode={["Control", "Meta", "Shift"]}` and `multiSelectionKeyCode={["Control", "Meta", "Shift"]}` on React Flow in `components/editor/canvas.tsx` so users can hold `Ctrl` (or `Cmd` / `Shift`) and drag the mouse across the canvas to draw a selection marquee.
+  - Enabled `selectionMode={SelectionMode.Partial}` for responsive partial-overlap node selection.
+  - Implemented `deleteNodesAndEdges` Liveblocks mutation to delete selected nodes and automatically cascade deletion to connected edges in collaborative storage, preserving undo/redo history.
+  - Wired `useKeyboardShortcuts` (`hooks/useKeyboardShortcuts.ts`) and React Flow `deleteKeyCode={["Delete", "Backspace"]}` to delete selected nodes upon pressing the `Delete` or `Backspace` keys outside of text inputs/textareas.
+  - Styled `.react-flow__selection` in `app/globals.css` with glowing cyan accent styling (`rgba(53, 224, 208, 0.12)` background, dashed `#35e0d0` border, soft ambient glow) matching the dark technical workspace theme.
+  - Verified with `npm run lint` (0 errors) and `npm run build` (100% clean Next.js production build).
+
 - Implemented **Floating Glass Panels UI Chrome Redesign** (`UI-update.md`):
   - Updated design tokens and CSS variables in `app/globals.css`: `--bg: #08090c`, `--panel-bg: #111318`, `--panel-border: rgba(255, 255, 255, 0.08)`, `--accent: #35e0d0`, `--accent-soft: rgba(53, 224, 208, 0.35)`, `--accent-glow: rgba(53, 224, 208, 0.16)`, and inner glow border gradient lines.
   - Rebuilt workspace shell architecture: `LiveblocksProvider` and `RoomProvider` now wrap `WorkspaceShell` so `EditorNavbar`, `CanvasEditor`, `ProjectSidebar`, and `AISidebar` are direct siblings at the viewport level, ensuring instant and unblocked toggle responsiveness.
@@ -25,6 +37,9 @@ Update this file whenever the current phase, active feature, or implementation s
     - Unified Button Styling & High-Contrast Typography (`app/globals.css`, `components/ui/dialog.tsx`, `components/ui/input.tsx`, `components/editor/share-dialog.tsx`, `components/editor/project-dialogs.tsx`, `components/editor/spec-preview-dialog.tsx`):
       - Enhanced `.glow-btn-cyan` and `.btn-primary-cyan` to maintain crisp, high-contrast text and border definition in both active and disabled states without dark/dull blob artifacts.
     - Bottom Shape Toolbar (`components/editor/canvas.tsx`): Updated shape palette pill with matching `#111318` solid glass frame, cyan glow shadow, high-contrast white button tiles (`border border-white/20 bg-white/10 text-white`), and crisp SVG icons for Rectangle, Diamond, Circle, Pill, Cylinder, and Hexagon shapes.
+    - Color Palette Swatch Overflow Fix (`components/editor/color-toolbar.tsx`): Expanded panel sizing to `width: "max-content"` and restyled into floating glass panel with `border: 1px solid var(--panel-border)`, `rounded-[14px]`, and `box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 20px var(--accent-glow)` so all 8 swatches render without clipping.
+    - Top Navbar Border Harmony (`app/globals.css`, `components/editor/editor-navbar.tsx`): Unified navbar border, outer shadow, and `inset 0 0 0 1px rgba(255,255,255,0.02)` inner highlight to match left/right sidebars.
+    - Dynamic Control Pill & Minimap Positioning (`components/editor/workspace-shell.tsx`, `components/editor/canvas-editor.tsx`, `components/editor/canvas.tsx`): Tied bottom-left zoom/undo-redo pill to `isSidebarOpen` (`translate-x-[304px] lg:translate-x-[336px]`) and bottom-right minimap to `isAiSidebarOpen` (`-translate-x-[376px]`) with smooth cubic-bezier transitions so controls never get covered by open sidebars.
   - Verified with `npm run lint` (0 errors) and `npm run build` (100% clean production build).
 - Wired the **"Generate Spec"** action in the Specs tab of the AI sidebar: connects to Liveblocks storage (`flow.nodes` and `flow.edges`) and `ai-chat` feed history, triggers `POST /api/ai/spec` and `POST /api/ai/spec/token`, tracks task execution in real-time with `useRealtimeRun`, displays progress indicators, and automatically refreshes the project specs list on task completion.
 - Updated `POST /api/ai/design` route to verify collaborator access using `hasProjectAccess(projectId, userId, primaryEmail)` so both project owners and invited collaborators can trigger AI architecture generation.

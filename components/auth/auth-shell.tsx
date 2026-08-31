@@ -40,7 +40,15 @@ export function AuthShell({ children, mode }: AuthShellProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#35e0d0] to-[#128a80] shadow-[0_0_18px_rgba(53,224,208,0.4)]">
               <Sparkles className="h-4.5 w-4.5 text-[#08090c]" />
             </div>
-            <span className="text-base font-bold tracking-tight text-[#eef1f3]">Systemeta AI</span>
+            <span
+              className="text-base font-bold tracking-tight"
+              style={{
+                color: "#35e0d0",
+                textShadow: "0 0 16px rgba(53, 224, 208, 0.6), 0 0 32px rgba(53, 224, 208, 0.3)",
+              }}
+            >
+              Systemeta AI
+            </span>
           </div>
 
           {/* Hero Pitch */}
@@ -91,7 +99,15 @@ export function AuthShell({ children, mode }: AuthShellProps) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#35e0d0] to-[#128a80] shadow-[0_0_14px_rgba(53,224,208,0.4)]">
               <Sparkles className="h-4 w-4 text-[#08090c]" />
             </div>
-            <span className="text-sm font-bold text-[#eef1f3]">Systemeta AI</span>
+            <span
+              className="text-sm font-bold tracking-tight"
+              style={{
+                color: "#35e0d0",
+                textShadow: "0 0 14px rgba(53, 224, 208, 0.6), 0 0 28px rgba(53, 224, 208, 0.3)",
+              }}
+            >
+              Systemeta AI
+            </span>
           </div>
 
           <div className="rounded-2xl shadow-[0_24px_70px_rgba(0,0,0,0.8),0_0_32px_rgba(53,224,208,0.12)]">

@@ -263,3 +263,11 @@
   stroke: var(--panel-border);
 }
 
+.react-flow__selection {
+  background: rgba(53, 224, 208, 0.12) !important;
+  border: 1px dashed #35e0d0 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 0 16px rgba(53, 224, 208, 0.2) !important;
+}
+
+

@@ -5,6 +5,7 @@ interface UseKeyboardShortcutsOptions {
   reactFlow: Pick<ReactFlowInstance, "zoomIn" | "zoomOut" | "fitView"> | null
   handleUndo: () => void
   handleRedo: () => void
+  handleDelete?: () => void
 }
 
 function isEditableTarget(target: EventTarget | null) {
@@ -21,7 +22,7 @@ function isEditableTarget(target: EventTarget | null) {
   return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT" || tagName === "BUTTON"
 }
 
-export function useKeyboardShortcuts({ reactFlow, handleUndo, handleRedo }: UseKeyboardShortcutsOptions) {
+export function useKeyboardShortcuts({ reactFlow, handleUndo, handleRedo, handleDelete }: UseKeyboardShortcutsOptions) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isEditableTarget(event.target)) {
@@ -57,6 +58,14 @@ export function useKeyboardShortcuts({ reactFlow, handleUndo, handleRedo }: UseK
         handleRedo()
         return
       }
+
+      if (event.key === "Delete" || event.key === "Backspace") {
+        if (handleDelete) {
+          event.preventDefault()
+          handleDelete()
+        }
+        return
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown)
@@ -64,5 +73,5 @@ export function useKeyboardShortcuts({ reactFlow, handleUndo, handleRedo }: UseK
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [handleRedo, handleUndo, reactFlow])
+  }, [handleDelete, handleRedo, handleUndo, reactFlow])
 }
