@@ -557,6 +557,8 @@ interface CanvasProps {
   isTemplateDialogOpen?: boolean
   manualSaveSignal?: number
   onSaveStateChange?: (nextState: { status: "idle" | "saving" | "saved" | "error"; error: string | null }) => void
+  isSidebarOpen?: boolean
+  isAiSidebarOpen?: boolean
 }
 
 function NextLogoMark() {
@@ -612,7 +614,16 @@ function ShapeIcon({ shape }: { shape: CanvasNodeShape }) {
   }
 }
 
-function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplateDialogOpen = false, manualSaveSignal, onSaveStateChange }: CanvasProps) {
+function CanvasInner({
+  projectId,
+  pendingTemplate,
+  onTemplateHandled,
+  isTemplateDialogOpen = false,
+  manualSaveSignal,
+  onSaveStateChange,
+  isSidebarOpen = true,
+  isAiSidebarOpen = true,
+}: CanvasProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useLiveblocksFlow<CanvasNode, CanvasEdge>({
     suspense: true,
   })
@@ -1103,7 +1114,12 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
         fitView
       >
         <Background color="rgba(255, 255, 255, 0.045)" gap={22} size={1.5} />
-        <MiniMap position="bottom-right" className="canvas-minimap" />
+        <MiniMap
+          position="bottom-right"
+          className={`canvas-minimap transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isAiSidebarOpen ? "-translate-x-[376px]" : "translate-x-0"
+          }`}
+        />
       </ReactFlow>
 
       <CollaboratorAvatarStack currentUserId={currentUserId} others={others} />
@@ -1111,12 +1127,16 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-24">
         <div className="relative h-full w-full">
-          <div className="pointer-events-auto absolute bottom-4 left-4 flex items-end gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-[rgba(17,19,24,0.72)] text-white shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl">
+          <div
+            className={`pointer-events-auto absolute bottom-4 left-4 z-30 flex items-end gap-3 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              isSidebarOpen ? "translate-x-[304px] lg:translate-x-[336px]" : "translate-x-0"
+            }`}
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-[#111318] text-white shadow-[0_8px_30px_rgba(0,0,0,0.4),0_0_20px_rgba(53,224,208,0.12)]">
               <NextLogoMark />
             </div>
 
-            <div className="flex items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-[rgba(17,19,24,0.72)] shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl">
+            <div className="flex items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111318] shadow-[0_8px_30px_rgba(0,0,0,0.4),0_0_20px_rgba(53,224,208,0.12)]">
               <div className="flex items-center gap-1 p-1">
                 <button
                   type="button"
@@ -1207,15 +1227,27 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
   )
 }
 
-export function Canvas({ projectId, pendingTemplate, onTemplateHandled, manualSaveSignal, onSaveStateChange }: CanvasProps) {
+export function Canvas({
+  projectId,
+  pendingTemplate,
+  onTemplateHandled,
+  isTemplateDialogOpen,
+  manualSaveSignal,
+  onSaveStateChange,
+  isSidebarOpen,
+  isAiSidebarOpen,
+}: CanvasProps) {
   return (
     <ReactFlowProvider>
       <CanvasInner
         projectId={projectId}
         pendingTemplate={pendingTemplate}
         onTemplateHandled={onTemplateHandled}
+        isTemplateDialogOpen={isTemplateDialogOpen}
         manualSaveSignal={manualSaveSignal}
         onSaveStateChange={onSaveStateChange}
+        isSidebarOpen={isSidebarOpen}
+        isAiSidebarOpen={isAiSidebarOpen}
       />
     </ReactFlowProvider>
   )

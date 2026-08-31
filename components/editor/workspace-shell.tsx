@@ -146,6 +146,8 @@ export function WorkspaceShell({ project, projects, isOwner = false }: Workspace
               isTemplateDialogOpen={isTemplateDialogOpen}
               manualSaveSignal={manualSaveSignal}
               onSaveStateChange={setSaveState}
+              isSidebarOpen={isSidebarOpen}
+              isAiSidebarOpen={isAiSidebarOpen}
             />
           </div>
 

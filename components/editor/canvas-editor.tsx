@@ -12,14 +12,19 @@ interface CanvasEditorProps {
   isTemplateDialogOpen?: boolean
   manualSaveSignal?: number
   onSaveStateChange?: (nextState: { status: "idle" | "saving" | "saved" | "error"; error: string | null }) => void
+  isSidebarOpen?: boolean
+  isAiSidebarOpen?: boolean
 }
 
 export function CanvasEditor({
   projectId,
   pendingTemplate,
   onTemplateHandled,
+  isTemplateDialogOpen,
   manualSaveSignal,
   onSaveStateChange,
+  isSidebarOpen = true,
+  isAiSidebarOpen = true,
 }: CanvasEditorProps) {
   return (
     <div className="relative h-full w-full">
@@ -28,8 +33,11 @@ export function CanvasEditor({
           projectId={projectId}
           pendingTemplate={pendingTemplate}
           onTemplateHandled={onTemplateHandled}
+          isTemplateDialogOpen={isTemplateDialogOpen}
           manualSaveSignal={manualSaveSignal}
           onSaveStateChange={onSaveStateChange}
+          isSidebarOpen={isSidebarOpen}
+          isAiSidebarOpen={isAiSidebarOpen}
         />
       </ClientSideSuspense>
     </div>

@@ -26,7 +26,7 @@ export function EditorNavbar({
   const SidebarIcon = isSidebarOpen ? PanelLeftClose : PanelLeftOpen
 
   return (
-    <nav className="fixed left-4 right-4 top-4 z-50 flex h-14 items-center justify-between px-4 bg-[#111318] shadow-2xl floating-glass-panel">
+    <nav className="fixed left-4 right-4 top-4 z-50 flex h-14 items-center justify-between px-4 floating-glass-panel">
       <div className="flex min-w-0 items-center gap-3">
         <Button
           aria-label={isSidebarOpen ? "Close projects sidebar" : "Open projects sidebar"}
