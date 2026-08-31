@@ -567,6 +567,51 @@ function NextLogoMark() {
   )
 }
 
+function ShapeIcon({ shape }: { shape: CanvasNodeShape }) {
+  switch (shape) {
+    case "rectangle":
+      return (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="6" width="18" height="12" rx="2" />
+        </svg>
+      )
+    case "diamond":
+      return (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 22 12 12 22 2 12" />
+        </svg>
+      )
+    case "circle":
+      return (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="9" />
+        </svg>
+      )
+    case "pill":
+      return (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="7" width="18" height="10" rx="5" />
+        </svg>
+      )
+    case "cylinder":
+      return (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+          <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+        </svg>
+      )
+    case "hexagon":
+      return (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 21 7 21 17 12 22 3 17 3 7" />
+        </svg>
+      )
+    default:
+      return null
+  }
+}
+
 function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplateDialogOpen = false, manualSaveSignal, onSaveStateChange }: CanvasProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useLiveblocksFlow<CanvasNode, CanvasEdge>({
     suspense: true,
@@ -1124,7 +1169,7 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
             </div>
           </div>
 
-          <div className="pointer-events-auto absolute bottom-4 left-1/2 -translate-x-1/2 rounded-2xl border border-white/[0.08] bg-[rgba(17,19,24,0.72)] px-3 py-2 shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl">
+          <div className="pointer-events-auto absolute bottom-4 left-1/2 -translate-x-1/2 rounded-2xl border border-white/[0.08] bg-[#111318] px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_24px_rgba(53,224,208,0.12)]">
             <div className="flex items-center gap-2">
               {NODE_SHAPES.map((shape) => (
                 <button
@@ -1133,16 +1178,11 @@ function CanvasInner({ projectId, pendingTemplate, onTemplateHandled, isTemplate
                   draggable
                   onDragStart={(event) => handleShapeDragStart(event, shape.name)}
                   onDragEnd={handleDragEnd}
-                  className="flex h-10 w-10 select-none items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-base text-[#eef1f3] transition hover:border-[#35e0d0]/50 hover:bg-[#35e0d0]/10 hover:text-[#35e0d0] active:scale-95"
+                  className="flex h-10 w-10 select-none items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-sm transition-all hover:border-[#35e0d0] hover:bg-[#35e0d0]/20 hover:text-[#35e0d0] hover:shadow-[0_0_14px_rgba(53,224,208,0.35)] active:scale-95"
                   title={shape.label}
                   aria-label={`Add ${shape.label}`}
                 >
-                  {shape.name === "rectangle" && "▭"}
-                  {shape.name === "diamond" && "◇"}
-                  {shape.name === "circle" && "◯"}
-                  {shape.name === "pill" && "▱"}
-                  {shape.name === "cylinder" && "◫"}
-                  {shape.name === "hexagon" && "⬡"}
+                  <ShapeIcon shape={shape.name} />
                 </button>
               ))}
             </div>
